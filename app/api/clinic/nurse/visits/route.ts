@@ -6,6 +6,7 @@ export async function GET() {
     where: { status: "WAITING_FOR_NURSE" },
     include: {
       nurseNote: true,
+      studentInfo: true,
       assignedDoctor: true,
     },
     orderBy: { createdAt: "desc" },

@@ -8,6 +8,9 @@ export async function GET() {
     const visits = await prisma.visit.findMany({
       where: { status: "SENT_TO_LAB" },
       orderBy: { createdAt: "desc" },
+      include: {
+        studentInfo: true,
+      },
     });
 
     return NextResponse.json(visits);

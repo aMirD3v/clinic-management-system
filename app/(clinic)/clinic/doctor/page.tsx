@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useEffect, useState } from "react"
-import { format } from "date-fns"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { signOut } from "next-auth/react"
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { signOut } from "next-auth/react";
 import {
   UserCheck,
   Heart,
@@ -37,134 +37,123 @@ import {
   Phone,
   Mail,
   Calendar,
-} from "lucide-react"
-import toast from "react-hot-toast"
+} from "lucide-react";
+import toast from "react-hot-toast";
 
 type Visit = {
-  id: string
-  studentId: string
-  reason: string
-  status: string
-  createdAt: string
+  id: string;
+  studentId: string;
+  reason: string;
+  status: string;
+  createdAt: string;
   nurseNote?: {
-    bloodPressure: string
-    temperature: string
-    pulse: string
-    weight: string
-    notes?: string
-  }
+    bloodPressure: string;
+    temperature: string;
+    pulse: string;
+    weight: string;
+    notes?: string;
+  };
   labResult?: {
-    result: string
-    notes?: string
-  }
-}
-
-type Student = {
-  fullName: string
-  fatherName: string
-  profileImageUrl?: string
-  gender?: string
-  college?: string
-  department?: string
-  age?: number
-  email?: string
-  phone?: string
-}
+    result: string;
+    notes?: string;
+  };
+  studentInfo?: {
+    fullName: string;
+    profileImageUrl?: string;
+    gender: string;
+    age: number;
+    phone: string;
+    email: string;
+    college: string;
+    department: string;
+  };
+};
 
 export default function DoctorPanel() {
-  const [visits, setVisits] = useState<Visit[]>([])
-  const [students, setStudents] = useState<Record<string, Student>>({})
-  const [loading, setLoading] = useState(true)
-  const [submittingVisits, setSubmittingVisits] = useState<Set<string>>(new Set())
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submittingVisits, setSubmittingVisits] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await fetch("/api/clinic/doctor/visits")
-      const data = await res.json()
-      setVisits(data)
-
-      const studentMap: Record<string, Student> = {}
-      await Promise.all(
-        data.map(async (visit: Visit) => {
-          try {
-            const sRes = await fetch(`/api/students/${visit.studentId}`)
-            const sData = await sRes.json()
-            studentMap[visit.studentId] = sData
-          } catch (error) {
-            console.error(`Failed to fetch student ${visit.studentId}:`, error)
-          }
-        }),
-      )
-      setStudents(studentMap)
+      const res = await fetch("/api/clinic/doctor/visits");
+      const data = await res.json();
+      setVisits(data);
     } catch (error) {
-      toast.error("Failed to load patient data")
+      toast.error("Failed to load patient data");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, visitId: string) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+    visitId: string
+  ) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
 
-    const diagnosis = formData.get("diagnosis") as string
+    const diagnosis = formData.get("diagnosis") as string;
     if (!diagnosis?.trim()) {
-      toast.error("Please enter a diagnosis")
-      return
+      toast.error("Please enter a diagnosis");
+      return;
     }
 
-    setSubmittingVisits((prev) => new Set(prev).add(visitId))
+    setSubmittingVisits((prev) => new Set(prev).add(visitId));
 
     const payload = {
       diagnosis: diagnosis,
       prescription: formData.get("prescription"),
       requestLabTest: formData.get("requestLabTest") === "on",
       notes: formData.get("notes"),
-    }
+    };
 
     try {
       const res = await fetch(`/api/clinic/doctor/${visitId}`, {
         method: "POST",
         body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
-      })
+      });
 
       if (res.ok) {
-        toast.success("Diagnosis submitted successfully!")
-        fetchData() // Refresh the data
+        toast.success("Diagnosis submitted successfully!");
+        fetchData(); // Refresh the data
       } else {
-        toast.error("Failed to submit diagnosis")
+        toast.error("Failed to submit diagnosis");
       }
     } catch (error) {
-      toast.error("Failed to submit diagnosis")
+      toast.error("Failed to submit diagnosis");
     } finally {
       setSubmittingVisits((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(visitId)
-        return newSet
-      })
+        const newSet = new Set(prev);
+        newSet.delete(visitId);
+        return newSet;
+      });
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">Loading patient data...</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            Loading patient data...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-    
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {visits.length === 0 ? (
           <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
@@ -172,17 +161,19 @@ export default function DoctorPanel() {
               <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
                 <Users className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Patients Waiting</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                No Patients Waiting
+              </h3>
               <p className="text-gray-500 dark:text-gray-400 max-w-sm">
-                All patients have been seen. New patients will appear here when they're ready for consultation.
+                All patients have been seen. New patients will appear here when
+                they're ready for consultation.
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-8">
             {visits.map((visit) => {
-              const student = students[visit.studentId]
-              const isSubmitting = submittingVisits.has(visit.id)
+              const isSubmitting = submittingVisits.has(visit.id);
 
               return (
                 <Card
@@ -195,9 +186,14 @@ export default function DoctorPanel() {
                         <UserCheck className="w-5 h-5 text-sky-500" />
                         <span>Patient Consultation</span>
                       </CardTitle>
-                      <Badge variant="secondary" className="flex items-center space-x-1">
+                      <Badge
+                        variant="secondary"
+                        className="flex items-center space-x-1"
+                      >
                         <Clock className="w-3 h-3" />
-                        <span>{format(new Date(visit.createdAt), "MMM dd, hh:mm a")}</span>
+                        <span>
+                          {format(new Date(visit.createdAt), "MMM dd, hh:mm a")}
+                        </span>
                       </Badge>
                     </div>
                   </CardHeader>
@@ -206,9 +202,12 @@ export default function DoctorPanel() {
                     {/* Patient Information */}
                     <div className="flex items-start space-x-6 p-6 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800/50 dark:to-blue-900/20 rounded-xl border border-gray-100 dark:border-gray-700">
                       <div className="flex-shrink-0">
-                        {student?.profileImageUrl ? (
+                        {visit.studentInfo?.profileImageUrl ? (
                           <img
-                            src={student.profileImageUrl || "/placeholder.svg"}
+                            src={
+                              visit.studentInfo.profileImageUrl ||
+                              "/placeholder.svg"
+                            }
                             alt="Patient photo"
                             className="rounded-lg object-cover border-2 border-white shadow-lg w-20 h-24"
                           />
@@ -222,7 +221,7 @@ export default function DoctorPanel() {
                       <div className="flex-1 space-y-4">
                         <div>
                           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            {student?.fullName || "Unknown Patient"}
+                            {visit.studentInfo?.fullName || "Unknown Patient"}
                           </h3>
                           <p className="text-sm text-sky-600 dark:text-sky-400 font-medium">
                             Student ID: {visit.studentId}
@@ -230,42 +229,42 @@ export default function DoctorPanel() {
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {student?.gender && (
+                          {visit.studentInfo?.gender && (
                             <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                               <User className="w-4 h-4" />
-                              <span>{student.gender}</span>
+                              <span>{visit.studentInfo.gender}</span>
                             </div>
                           )}
-                          {student?.age && (
+                          {visit.studentInfo?.age && (
                             <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                               <Calendar className="w-4 h-4" />
-                              <span>{student.age} years</span>
+                              <span>{visit.studentInfo.age} years</span>
                             </div>
                           )}
-                          {student?.phone && (
+                          {visit.studentInfo?.phone && (
                             <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                               <Phone className="w-4 h-4" />
-                              <span>{student.phone}</span>
+                              <span>{visit.studentInfo.phone}</span>
                             </div>
                           )}
-                          {student?.email && (
+                          {visit.studentInfo?.email && (
                             <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                               <Mail className="w-4 h-4" />
-                              <span>{student.email}</span>
+                              <span>{visit.studentInfo.email}</span>
                             </div>
                           )}
                         </div>
 
-                        {student?.college && (
+                        {visit.studentInfo?.college && (
                           <div className="space-y-2">
                             <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                               <GraduationCap className="w-4 h-4" />
-                              <span>{student.college}</span>
+                              <span>{visit.studentInfo.college}</span>
                             </div>
-                            {student.department && (
+                            {visit.studentInfo.department && (
                               <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                                 <MapPin className="w-4 h-4" />
-                                <span>{student.department}</span>
+                                <span>{visit.studentInfo.department}</span>
                               </div>
                             )}
                           </div>
@@ -290,7 +289,9 @@ export default function DoctorPanel() {
                           <div className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
                             <Heart className="w-5 h-5 text-red-500" />
                             <div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">Blood Pressure</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Blood Pressure
+                              </p>
                               <p className="font-semibold text-gray-900 dark:text-white">
                                 {visit.nurseNote.bloodPressure}
                               </p>
@@ -299,7 +300,9 @@ export default function DoctorPanel() {
                           <div className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
                             <Thermometer className="w-5 h-5 text-orange-500" />
                             <div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">Temperature</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Temperature
+                              </p>
                               <p className="font-semibold text-gray-900 dark:text-white">
                                 {visit.nurseNote.temperature}
                               </p>
@@ -308,22 +311,31 @@ export default function DoctorPanel() {
                           <div className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
                             <Activity className="w-5 h-5 text-blue-500" />
                             <div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">Pulse Rate</p>
-                              <p className="font-semibold text-gray-900 dark:text-white">{visit.nurseNote.pulse}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Pulse Rate
+                              </p>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {visit.nurseNote.pulse}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
                             <Weight className="w-5 h-5 text-purple-500" />
                             <div>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">Weight</p>
-                              <p className="font-semibold text-gray-900 dark:text-white">{visit.nurseNote.weight}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Weight
+                              </p>
+                              <p className="font-semibold text-gray-900 dark:text-white">
+                                {visit.nurseNote.weight}
+                              </p>
                             </div>
                           </div>
                         </div>
                         {visit.nurseNote.notes && (
                           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                             <p className="text-sm text-blue-800 dark:text-blue-200">
-                              <strong>Nurse Notes:</strong> {visit.nurseNote.notes}
+                              <strong>Nurse Notes:</strong>{" "}
+                              {visit.nurseNote.notes}
                             </p>
                           </div>
                         )}
@@ -338,10 +350,13 @@ export default function DoctorPanel() {
                           <span>Laboratory Results</span>
                         </h3>
                         <div className="space-y-3">
-                          <p className="text-sm text-blue-800 dark:text-blue-200">{visit.labResult.result}</p>
+                          <p className="text-sm text-blue-800 dark:text-blue-200">
+                            {visit.labResult.result}
+                          </p>
                           {visit.labResult.notes && (
                             <p className="text-sm text-blue-700 dark:text-blue-300">
-                              <strong>Lab Notes:</strong> {visit.labResult.notes}
+                              <strong>Lab Notes:</strong>{" "}
+                              {visit.labResult.notes}
                             </p>
                           )}
                         </div>
@@ -351,10 +366,16 @@ export default function DoctorPanel() {
                     <Separator />
 
                     {/* Diagnosis Form */}
-                    <form onSubmit={(e) => handleSubmit(e, visit.id)} className="space-y-6">
+                    <form
+                      onSubmit={(e) => handleSubmit(e, visit.id)}
+                      className="space-y-6"
+                    >
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <Label htmlFor={`diagnosis-${visit.id}`} className="flex items-center space-x-2">
+                          <Label
+                            htmlFor={`diagnosis-${visit.id}`}
+                            className="flex items-center space-x-2"
+                          >
                             <FileText className="w-4 h-4 text-sky-500" />
                             <span>Diagnosis *</span>
                           </Label>
@@ -368,7 +389,10 @@ export default function DoctorPanel() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor={`prescription-${visit.id}`} className="flex items-center space-x-2">
+                          <Label
+                            htmlFor={`prescription-${visit.id}`}
+                            className="flex items-center space-x-2"
+                          >
                             <Pill className="w-4 h-4 text-blue-500" />
                             <span>Prescription</span>
                           </Label>
@@ -382,7 +406,10 @@ export default function DoctorPanel() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor={`notes-${visit.id}`} className="flex items-center space-x-2">
+                        <Label
+                          htmlFor={`notes-${visit.id}`}
+                          className="flex items-center space-x-2"
+                        >
                           <FileText className="w-4 h-4 text-gray-500" />
                           <span>Clinical Notes</span>
                         </Label>
@@ -395,8 +422,14 @@ export default function DoctorPanel() {
                       </div>
 
                       <div className="flex items-center space-x-2 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                        <Checkbox id={`lab-${visit.id}`} name="requestLabTest" />
-                        <Label htmlFor={`lab-${visit.id}`} className="flex items-center space-x-2 cursor-pointer">
+                        <Checkbox
+                          id={`lab-${visit.id}`}
+                          name="requestLabTest"
+                        />
+                        <Label
+                          htmlFor={`lab-${visit.id}`}
+                          className="flex items-center space-x-2 cursor-pointer"
+                        >
                           <TestTube className="w-4 h-4 text-purple-500" />
                           <span>Request Laboratory Test</span>
                         </Label>
@@ -405,7 +438,8 @@ export default function DoctorPanel() {
                       <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <AlertCircle className="w-4 h-4 text-blue-500" />
                         <p className="text-sm text-blue-600 dark:text-blue-400">
-                          Please ensure all required fields are completed before submitting the diagnosis.
+                          Please ensure all required fields are completed before
+                          submitting the diagnosis.
                         </p>
                       </div>
 
@@ -429,11 +463,11 @@ export default function DoctorPanel() {
                     </form>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

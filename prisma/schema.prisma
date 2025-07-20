@@ -34,9 +34,27 @@ enum Role {
   PHARMACY
 }
 
+model StudentInfo {
+  id             String   @id @default(uuid())
+  studentId      String   @unique
+  fullName       String
+  gender         String
+  age            Int?
+  email          String?
+  phone          String?
+  college        String?
+  department     String?
+  profileImageUrl String?
+
+  visits         Visit[]  @relation("StudentVisits")
+}
+
 model Visit {
   id               String       @id @default(uuid())
   studentId        String
+  studentInfoId    String?      
+  studentInfo      StudentInfo? @relation("StudentVisits", fields: [studentInfoId], references: [id])
+
   reason           String
   status           VisitStatus  @default(WAITING_FOR_NURSE)
   assignedDoctorId String?
@@ -50,6 +68,7 @@ model Visit {
 
   assignedDoctor   User?        @relation("DoctorAssigned", fields: [assignedDoctorId], references: [id])
 }
+
 
 model NurseNote {
   id            String   @id @default(uuid())

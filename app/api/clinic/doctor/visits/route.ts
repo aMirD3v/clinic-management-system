@@ -9,6 +9,7 @@ export async function GET() {
     include: {
       nurseNote: true,
       labResult: true,
+      studentInfo: true,
     },
     orderBy: { createdAt: 'asc' },
   })

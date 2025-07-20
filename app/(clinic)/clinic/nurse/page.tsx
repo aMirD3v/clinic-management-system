@@ -38,7 +38,7 @@ interface Visit {
   assignedDoctor?: {
     name: string
   }
-  student?: {
+  studentInfo?: {
     fullName: string
     profileImageUrl?: string
   }
@@ -75,26 +75,6 @@ export default function NurseDashboard() {
       const res = await fetch("/api/clinic/nurse/visits/")
       if (res.ok) {
         let data: Visit[] = await res.json()
-        // Find visits missing student info
-        const visitsToFetch = data.filter(
-          v => !v.student || !v.student.fullName || !v.student.profileImageUrl
-        )
-        // Fetch missing student info in parallel
-        const studentFetches = visitsToFetch.map(async (visit) => {
-          try {
-            const sRes = await fetch(`/api/students/${visit.studentId}`)
-            if (sRes.ok) {
-              const sData = await sRes.json()
-              visit.student = {
-                fullName: sData.fullName,
-                profileImageUrl: sData.profileImageUrl || undefined,
-              }
-            }
-          } catch (e) {
-            // ignore error, leave as is
-          }
-        })
-        await Promise.all(studentFetches)
         setVisits(data)
       } else {
         toast.error("Failed to load visits")
@@ -183,7 +163,7 @@ export default function NurseDashboard() {
                             </div>
                             <div>
                               <h3 className="font-semibold text-gray-900 dark:text-white">
-                                {visit.student?.fullName || `Student ${visit.studentId}`}
+                                {visit.studentInfo?.fullName || `Student ${visit.studentId}`}
                               </h3>
                               <p className="text-sm text-gray-600 dark:text-gray-300">ID: {visit.studentId}</p>
                               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{visit.reason}</p>
@@ -225,7 +205,7 @@ export default function NurseDashboard() {
                     <span>Record Vital Signs</span>
                   </CardTitle>
                   <CardDescription>
-                    Patient: {selectedVisit.student?.fullName || selectedVisit.studentId}
+                    Patient: {selectedVisit.studentInfo?.fullName || selectedVisit.studentId}
                   </CardDescription>
                 </div>
                 <Button variant="outline" onClick={handleCancel} className="flex items-center space-x-2 bg-transparent">
@@ -243,7 +223,7 @@ export default function NurseDashboard() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">
-                      {selectedVisit.student?.fullName || `Student ${selectedVisit.studentId}`}
+                      {selectedVisit.studentInfo?.fullName || `Student ${selectedVisit.studentId}`}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">Reason: {selectedVisit.reason}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -333,7 +313,7 @@ export default function NurseDashboard() {
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting || !form.bloodPressure || !form.temperature || !form.pulse || !form.weight}
-                  className="flex-1 bg-sky-500 hover:bg-sky-600 text-white h-12 text-lg font-medium"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 text-lg font-medium"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center space-x-2">

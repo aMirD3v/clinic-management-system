@@ -48,7 +48,8 @@ export default function ReceptionPage() {
     setIsSearching(true)
 
     try {
-      const res = await fetch(`/api/students/${studentId}`)
+      const encodedStudentId = encodeURIComponent(studentId)
+      const res = await fetch(`/api/students/${encodedStudentId}`)
       if (res.ok) {
         const data = await res.json()
         setStudent(data)
