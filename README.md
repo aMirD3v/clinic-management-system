@@ -60,8 +60,11 @@ This is a full-stack web application for managing a university clinic. It provid
     Create a `.env` file in the root of the project and add the following:
     ```
     DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database>"
+    
     NEXTAUTH_URL="http://localhost:3000"
     NEXTAUTH_SECRET="<your-secret>"
+
+    NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
     ```
 
 4.  **Run database migrations:**
