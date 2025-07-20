@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+
+  // For doctors assigned to visits
+  assignedVisits Visit[] @relation("DoctorAssigned")
+}
+
+enum Role {
+  RECEPTION
+  NURSE
+  DOCTOR
+  LABORATORY
+  PHARMACY
+}
+
+model Visit {
+  id               String       @id @default(uuid())
+  studentId        String
+  reason           String
+  status           VisitStatus  @default(WAITING_FOR_NURSE)
+  assignedDoctorId String?
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  nurseNote        NurseNote?
+  doctorNote       DoctorNote?
+  labResult        LabResult?
+
+  assignedDoctor   User?        @relation("DoctorAssigned", fields: [assignedDoctorId], references: [id])
+}
+
+model NurseNote {
+  id            String   @id @default(uuid())
+  visitId       String   @unique
+  visit         Visit    @relation(fields: [visitId], references: [id])
+  bloodPressure String
+  temperature   String
+  pulse         String
+  weight        String
+  notes         String?
+}
+
+model DoctorNote {
+  id              String   @id @default(uuid())
+  visitId         String   @unique
+  visit           Visit    @relation(fields: [visitId], references: [id])
+  diagnosis       String
+  prescription    String?
+  requestLabTest  Boolean
+  notes           String?
+}
+
+model LabResult {
+  id        String   @id @default(uuid())
+  visitId   String   @unique
+  visit     Visit    @relation(fields: [visitId], references: [id])
+  result    String
+  notes     String?
+}
+
+enum VisitStatus {
+  WAITING_FOR_NURSE
+  READY_FOR_DOCTOR
+  SENT_TO_LAB
+  LAB_RESULTS_READY
+  READY_FOR_PHARMACY
+  COMPLETED
+}
+
+

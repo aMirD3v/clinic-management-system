@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/lib/theme-context";
-import "./globals.css";
+import "@/app/globals.css";
 import { Navbar } from "@/components/Navbar";
 import AuthSessionProvider from "@/components/AuthSessionProvider";
 
@@ -27,17 +27,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      > 
         <AuthSessionProvider>
+          <Navbar />
           <ThemeProvider>
             {children}
             <Toaster position="top-center" />
           </ThemeProvider>
         </AuthSessionProvider>
-      </body>
-    </html>
+      
   );
 }
