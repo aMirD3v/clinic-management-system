@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Clinic Management System
+
+This is a full-stack web application for managing a university clinic. It provides different interfaces for various roles within the clinic, including reception, nurses, doctors, laboratory technicians, and pharmacy staff.
+
+## Tech Stack
+
+*   **Framework**: [Next.js](https://nextjs.org/)
+*   **Language**: [TypeScript](https://www.typescriptlang.org/)
+*   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+*   **UI Components**: [Radix UI](https://www.radix-ui.com/)
+*   **Database ORM**: [Prisma](https://www.prisma.io/)
+*   **Database**: [PostgreSQL](https://www.postgresql.org/)
+*   **Authentication**: [NextAuth.js](https://next-auth.js.org/)
+*   **Form Management**: [React Hook Form](https://react-hook-form.com/)
+*   **Notifications**: [React Hot Toast](https://react-hot-toast.com/)
+
+## Features
+
+*   **Role-Based Access Control**: Different users have different permissions based on their roles.
+*   **Reception**:
+    *   Search for students by ID.
+    *   Register new patient visits.
+*   **Nurse**:
+    *   View a list of patients waiting for vital signs to be taken.
+    *   Record vital signs (blood pressure, temperature, pulse, weight).
+    *   Send patients to the doctor.
+*   **Doctor**:
+    *   View a list of patients ready for consultation.
+    *   View patient information, vital signs, and lab results.
+    *   Submit a diagnosis and prescription.
+    *   Request lab tests.
+*   **Laboratory**:
+    *   View a list of pending lab requests.
+    *   Submit lab results.
+*   **Pharmacy**:
+    *   (Placeholder for pharmacy functionality)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+*   [Node.js](https://nodejs.org/en/) (v20 or later)
+*   [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+*   [PostgreSQL](https://www.postgresql.org/download/)
+
+### Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd clinic-management-system
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Set up environment variables:**
+    Create a `.env` file in the root of the project and add the following:
+    ```
+    DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database>"
+    NEXTAUTH_URL="http://localhost:3000"
+    NEXTAUTH_SECRET="<your-secret>"
+    ```
+
+4.  **Run database migrations:**
+    ```bash
+    npx prisma migrate dev
+    ```
+
+5.  **Seed the database:**
+    ```bash
+    npx prisma db seed
+    ```
+
+6.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+
+The application should now be running at [http://localhost:3000](http://localhost:3000).
+
+## Project Structure
+
+*   `app/`: Contains the main application code, including pages and API routes.
+*   `components/`: Contains reusable React components.
+*   `lib/`: Contains helper functions, database client, and authentication configuration.
+*   `prisma/`: Contains the database schema, migrations, and seed script.
+*   `public/`: Contains static assets like images and fonts.
+*   `types/`: Contains TypeScript type definitions.
+
+## API Endpoints
+
+*   `POST /api/auth/...`: Handles user authentication.
+*   `POST /api/clinic/reception/visits`: Creates a new visit.
+*   `GET /api/clinic/nurse/visits`: Fetches visits waiting for a nurse.
+*   `POST /api/clinic/nurse/submit/[visitId]/nurse-note`: Submits a nurse's notes.
+*   `GET /api/clinic/doctor/visits`: Fetches visits ready for a doctor.
+*   `POST /api/clinic/doctor/[id]`: Submits a doctor's diagnosis.
+*   `GET /api/clinic/laboratory/visits`: Fetches visits sent to the lab.
+*   `POST /api/clinic/laboratory/submit/[id]`: Submits lab results.
+*   `GET /api/students/[id]`: Fetches student information.
+
+## Deployment
+
+To create a production build, run the following command:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
+```
+Then, start the production server:
+```bash
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Linting
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To run the linter, use the following command:
+```bash
+npm run lint
+```# clinic-management-system
