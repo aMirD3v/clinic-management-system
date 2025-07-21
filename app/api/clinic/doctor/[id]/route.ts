@@ -8,20 +8,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const body = await req.json()
     const { diagnosis, prescription, requestLabTest, notes } = body
 
-    const updatedVisit = await prisma.visit.update({
-      where: { id: visitId },
-      data: {
-        doctorNote: {
-          create: {
-            diagnosis,
-            prescription,
-            notes,
-            requestLabTest,
-          },
-        },
-        status: requestLabTest ? 'SENT_TO_LAB' : 'READY_FOR_PHARMACY',
+const updatedVisit = await prisma.visit.update({
+  where: { id: visitId },
+  data: {
+    doctorNote: {
+      upsert: {
+        create: { diagnosis, prescription, notes, requestLabTest },
+        update: { diagnosis, prescription, notes, requestLabTest },
       },
-    })
+    },
+    status: requestLabTest ? 'SENT_TO_LAB' : 'READY_FOR_PHARMACY',
+  },
+});
+
 
     return NextResponse.json(updatedVisit)
   } catch (error) {

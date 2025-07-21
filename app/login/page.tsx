@@ -30,30 +30,58 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (data: FormData) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const result = await signIn('credentials', {
-        username: data.username,
-        password: data.password,
-        redirect: false,
-      });
+const onSubmit = async (data: FormData) => {
+  setIsLoading(true);
+  setError(null);
 
-      if (result?.error) {
-        setError(result.error);
-        toast.error(result.error);
-      } else {
-        router.push('/clinic/reception');
-      }
-    } catch (err) {
-      setError("An unexpected error occurred");
-      toast.error("An unexpected error occurred");
-    } finally {
+  try {
+    const result = await signIn('credentials', {
+      username: data.username,
+      password: data.password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError(result.error);
+      toast.error(result.error);
       setIsLoading(false);
+      return;
     }
-  };
+
+    // Now fetch the session to get the user role
+    const sessionRes = await fetch("/api/auth/session");
+    const session = await sessionRes.json();
+
+    const role = session?.user?.role;
+
+    switch (role) {
+      case "RECEPTION":
+        router.push("/clinic/reception");
+        break;
+      case "NURSE":
+        router.push("/clinic/nurse");
+        break;
+      case "DOCTOR":
+        router.push("/clinic/doctor");
+        break;
+      case "LABORATORY":
+        router.push("/clinic/laboratory");
+        break;
+      case "PHARMACY":
+        router.push("/clinic/pharmacy");
+        break;
+      default:
+        toast.error("Unauthorized role.");
+        break;
+    }
+  } catch (err) {
+    setError("An unexpected error occurred");
+    toast.error("An unexpected error occurred");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">

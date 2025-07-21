@@ -217,6 +217,11 @@ export default function DoctorPanel() {
                           </div>
                         )}
                       </div>
+                      {visit.labResult && (
+                        <span className="absolute top-40 right-10 inline-block bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                          Lab Result
+                        </span>
+                      )}
 
                       <div className="flex-1 space-y-4">
                         <div>
@@ -420,20 +425,21 @@ export default function DoctorPanel() {
                           className="min-h-[100px] resize-none"
                         />
                       </div>
-
-                      <div className="flex items-center space-x-2 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                        <Checkbox
-                          id={`lab-${visit.id}`}
-                          name="requestLabTest"
-                        />
-                        <Label
-                          htmlFor={`lab-${visit.id}`}
-                          className="flex items-center space-x-2 cursor-pointer"
-                        >
-                          <TestTube className="w-4 h-4 text-purple-500" />
-                          <span>Request Laboratory Test</span>
-                        </Label>
-                      </div>
+                      {visit.labResult ? null : (
+                        <div className="flex items-center space-x-2 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                          <Checkbox
+                            id={`lab-${visit.id}`}
+                            name="requestLabTest"
+                          />
+                          <Label
+                            htmlFor={`lab-${visit.id}`}
+                            className="flex items-center space-x-2 cursor-pointer"
+                          >
+                            <TestTube className="w-4 h-4 text-purple-500" />
+                            <span>Request Laboratory Test</span>
+                          </Label>
+                        </div>
+                      )}
 
                       <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <AlertCircle className="w-4 h-4 text-blue-500" />

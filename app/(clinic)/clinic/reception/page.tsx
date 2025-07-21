@@ -125,7 +125,7 @@ export default function ReceptionPage() {
                       value={studentId}
                       onChange={(e) => setStudentId(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="e.g., JU/2024/001"
+                      placeholder="e.g., R/0001/18"
                       className="flex-1"
                     />
                     <Button onClick={fetchStudent} disabled={isSearching} className="bg-blue-500 hover:bg-blue-600">
