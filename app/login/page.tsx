@@ -93,8 +93,8 @@ const onSubmit = async (data: FormData) => {
         <div className="hidden lg:flex flex-col justify-center space-y-8 px-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                <Heart className="w-7 h-7 text-white" />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center">
+                <img src={"public/jju-logo.jpg"}/>
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Jigjiga University</h1>

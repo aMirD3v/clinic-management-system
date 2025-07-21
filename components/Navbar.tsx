@@ -40,18 +40,18 @@ export function Navbar() {
   let title = 'Clinic Management System';
 
   if (pathname.includes('/clinic/doctor')) {
-    title = 'Doctor Panel';
+    title = 'JJU-CMS | Doctor Panel';
   } else if (pathname.includes('/clinic/laboratory')) {
-    title = 'Laboratory Panel';
+    title = 'JJU-CMS | Laboratory Panel';
   }
     else if (pathname.includes('/clinic/reception')){
-    title = 'Reception Panel';
+    title = 'JJU-CMS | Reception Panel';
   }
     else if (pathname.includes('/clinic/nurse')){
-    title = 'Nurse Panel';
+    title = 'JJU-CMS | Nurse Panel';
   }
     else if (pathname.includes('/clinic/pharmacy')){
-    title = 'Pharmacy Panel';
+    title = 'JJU-CMS | Pharmacy Panel';
   }
 
   return (
