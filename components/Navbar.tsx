@@ -40,18 +40,18 @@ export function Navbar() {
   let title = 'Clinic Management System';
 
   if (pathname.includes('/clinic/doctor')) {
-    title = 'JJU-CMS | Doctor Panel';
+    title = 'Doctor Panel';
   } else if (pathname.includes('/clinic/laboratory')) {
-    title = 'JJU-CMS | Laboratory Panel';
+    title = 'Laboratory Panel';
   }
     else if (pathname.includes('/clinic/reception')){
-    title = 'JJU-CMS | Reception Panel';
+    title = 'Reception Panel';
   }
     else if (pathname.includes('/clinic/nurse')){
-    title = 'JJU-CMS | Nurse Panel';
+    title = 'Nurse Panel';
   }
     else if (pathname.includes('/clinic/pharmacy')){
-    title = 'JJU-CMS | Pharmacy Panel';
+    title = 'Pharmacy Panel';
   }
 
   return (
@@ -65,9 +65,13 @@ export function Navbar() {
                 <div >
                   <Image src="/logo.png" alt="Jigjiga University" width={40} height={40} className="rounded-lg" />
                 </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h1>
-                  <p className="text-xs text-blue-500 font-medium -mt-1">Jigjiga University</p>
+                <div className="hidden sm:flex items-center space-x-2">
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">JJU</h1>
+                  <div className="bg-gray-900 dark:bg-blue-500 w-0.5 h-8"></div>
+                  <div className="flex flex-col">
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h1>
+                    <p className="text-xs text-blue-500 font-medium -mt-1">Clinic Management System</p>
+                  </div>
                 </div>
               </Link>
             </div>
