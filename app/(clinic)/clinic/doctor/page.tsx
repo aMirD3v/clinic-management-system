@@ -6,7 +6,13 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,6 +45,7 @@ import {
   Calendar,
   ClipboardList,
   ArrowLeft,
+  Search,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -73,13 +80,35 @@ type Visit = {
 
 export default function DoctorPanel() {
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [filteredVisits, setFilteredVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submittingVisits, setSubmittingVisits] = useState<Set<string>>(new Set());
+  const [submittingVisits, setSubmittingVisits] = useState<Set<string>>(
+    new Set()
+  );
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredVisits(visits);
+    } else {
+      const filtered = visits.filter((visit) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          visit.studentId.toLowerCase().includes(searchLower) ||
+          visit.studentInfo?.fullName?.toLowerCase().includes(searchLower) ||
+          visit.reason.toLowerCase().includes(searchLower) ||
+          visit.studentInfo?.college?.toLowerCase().includes(searchLower) ||
+          visit.studentInfo?.department?.toLowerCase().includes(searchLower)
+        );
+      });
+      setFilteredVisits(filtered);
+    }
+  }, [searchTerm, visits]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -87,6 +116,7 @@ export default function DoctorPanel() {
       const res = await fetch("/api/clinic/doctor/visits");
       const data = await res.json();
       setVisits(data);
+      setFilteredVisits(data);
     } catch (error) {
       toast.error("Failed to load patient data");
     } finally {
@@ -94,7 +124,10 @@ export default function DoctorPanel() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, visitId: string) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+    visitId: string
+  ) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
@@ -158,28 +191,60 @@ export default function DoctorPanel() {
           /* Visits List View */
           <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <ClipboardList className="w-5 h-5 text-sky-500" />
-                <span>Patient Consultations</span>
-              </CardTitle>
-              <CardDescription>Select a patient to view details and provide diagnosis</CardDescription>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center space-x-2">
+                    <ClipboardList className="w-5 h-5 text-sky-500" />
+                    <span>Patient Consultations</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Select a patient to view details and provide diagnosis
+                  </CardDescription>
+                </div>
+                <div className="relative w-full sm:w-auto">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search patients..."
+                    className="pl-10 w-full sm:w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              {visits.length === 0 ? (
+              {filteredVisits.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-gray-400" />
+                    {searchTerm ? (
+                      <Search className="w-8 h-8 text-gray-400" />
+                    ) : (
+                      <Users className="w-8 h-8 text-gray-400" />
+                    )}
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    No Patients Waiting
+                    {searchTerm
+                      ? "No matching patients found"
+                      : "No Patients Waiting"}
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    All patients have been seen. New patients will appear here when they're ready for consultation.
+                    {searchTerm
+                      ? "Try a different search term"
+                      : "All patients have been seen. New patients will appear here when they're ready for consultation."}
                   </p>
+                  {searchTerm && (
+                    <Button
+                      variant="ghost"
+                      className="mt-4"
+                      onClick={() => setSearchTerm("")}
+                    >
+                      Clear search
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {visits.map((visit) => (
+                  {filteredVisits.map((visit) => (
                     <Card
                       key={visit.id}
                       className="hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-sky-500 bg-white dark:bg-gray-900"
@@ -190,7 +255,10 @@ export default function DoctorPanel() {
                           <div className="flex items-center space-x-4">
                             {visit.studentInfo?.profileImageUrl ? (
                               <img
-                                src={visit.studentInfo.profileImageUrl || "/placeholder.svg"}
+                                src={
+                                  visit.studentInfo.profileImageUrl ||
+                                  "/placeholder.svg"
+                                }
                                 alt="Patient photo"
                                 className="rounded-lg object-cover border-2 border-white shadow-lg w-12 h-12"
                               />
@@ -201,17 +269,25 @@ export default function DoctorPanel() {
                             )}
                             <div>
                               <h3 className="font-semibold text-gray-900 dark:text-white">
-                                {visit.studentInfo?.fullName || `Student ${visit.studentId}`}
+                                {visit.studentInfo?.fullName ||
+                                  `Student ${visit.studentId}`}
                               </h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">ID: {visit.studentId}</p>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{visit.reason}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                                ID: {visit.studentId}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                {visit.reason}
+                              </p>
                             </div>
                           </div>
                           <div className="text-right space-y-2">
                             <div className="flex items-center space-x-2">
                               <Clock className="w-4 h-4 text-gray-400" />
                               <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {format(new Date(visit.createdAt), "MMM dd, HH:mm")}
+                                {format(
+                                  new Date(visit.createdAt),
+                                  "MMM dd, HH:mm"
+                                )}
                               </span>
                             </div>
                             {visit.nurseNote && (
@@ -219,7 +295,10 @@ export default function DoctorPanel() {
                                 Vitals Recorded
                               </Badge>
                             )}
-                            <Button size="sm" className="bg-sky-500 hover:bg-sky-600 text-white">
+                            <Button
+                              size="sm"
+                              className="bg-sky-500 hover:bg-sky-600 text-white"
+                            >
                               <UserCheck className="w-4 h-4 mr-2" />
                               Consult
                             </Button>
@@ -243,18 +322,25 @@ export default function DoctorPanel() {
                     <span>Patient Consultation</span>
                   </CardTitle>
                   <CardDescription>
-                    {selectedVisit.studentInfo?.fullName || selectedVisit.studentId}
+                    {selectedVisit.studentInfo?.fullName ||
+                      selectedVisit.studentId}
                   </CardDescription>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Badge variant="secondary" className="flex items-center space-x-1">
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center space-x-1"
+                  >
                     <Clock className="w-3 h-3" />
                     <span>
-                      {format(new Date(selectedVisit.createdAt), "MMM dd, hh:mm a")}
+                      {format(
+                        new Date(selectedVisit.createdAt),
+                        "MMM dd, hh:mm a"
+                      )}
                     </span>
                   </Badge>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setSelectedVisit(null)}
                     className="flex items-center space-x-2 bg-transparent"
                   >
@@ -271,7 +357,10 @@ export default function DoctorPanel() {
                 <div className="flex-shrink-0">
                   {selectedVisit.studentInfo?.profileImageUrl ? (
                     <img
-                      src={selectedVisit.studentInfo.profileImageUrl || "/placeholder.svg"}
+                      src={
+                        selectedVisit.studentInfo.profileImageUrl ||
+                        "/placeholder.svg"
+                      }
                       alt="Patient photo"
                       className="rounded-lg object-cover border-2 border-white shadow-lg w-20 h-24"
                     />
@@ -403,7 +492,8 @@ export default function DoctorPanel() {
                   {selectedVisit.nurseNote.notes && (
                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>Nurse Notes:</strong> {selectedVisit.nurseNote.notes}
+                        <strong>Nurse Notes:</strong>{" "}
+                        {selectedVisit.nurseNote.notes}
                       </p>
                     </div>
                   )}
@@ -423,7 +513,8 @@ export default function DoctorPanel() {
                     </p>
                     {selectedVisit.labResult.notes && (
                       <p className="text-sm text-blue-700 dark:text-blue-300">
-                        <strong>Lab Notes:</strong> {selectedVisit.labResult.notes}
+                        <strong>Lab Notes:</strong>{" "}
+                        {selectedVisit.labResult.notes}
                       </p>
                     )}
                   </div>
