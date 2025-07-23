@@ -1,3 +1,4 @@
+// app/(clinic)/clinic/laboratory/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,10 +12,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { signOut } from "next-auth/react";
 import {
   Microscope,
   TestTube,
@@ -40,7 +40,12 @@ interface Visit {
   studentId: string;
   reason: string;
   createdAt: string;
-
+  doctorNote?: {
+    labTests: Array<{
+      category: string;
+      tests: string[];
+    }>;
+  };
   studentInfo: {
     studentId: string;
     fullName: string;
@@ -54,12 +59,23 @@ interface Visit {
   };
 }
 
+interface TestResult {
+  testName: string;
+  result: string;
+  normalRange: string;
+}
+
+interface CategoryResults {
+  [category: string]: TestResult[];
+}
+
 export default function LabPanel() {
   const [visits, setVisits] = useState<Visit[]>([]);
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
-  const [result, setResult] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [categoryResults, setCategoryResults] = useState<CategoryResults>({});
+  const [allTestsCompleted, setAllTestsCompleted] = useState(false);
 
   useEffect(() => {
     fetchVisits();
@@ -79,20 +95,58 @@ export default function LabPanel() {
     }
   };
 
+  useEffect(() => {
+    if (selectedVisit && selectedVisit.doctorNote?.labTests) {
+      // Initialize results for each test
+      const initialResults: CategoryResults = {};
+      
+      selectedVisit.doctorNote.labTests.forEach(category => {
+        initialResults[category.category] = category.tests.map(test => ({
+          testName: test,
+          result: "",
+          normalRange: ""
+        }));
+      });
+      
+      setCategoryResults(initialResults);
+      setNotes("");
+    }
+  }, [selectedVisit]);
+
+  useEffect(() => {
+    // Check if all tests have results
+    if (selectedVisit && selectedVisit.doctorNote?.labTests) {
+      const allFilled = Object.values(categoryResults).every(category => 
+        category.every(test => test.result.trim() !== "")
+      );
+      setAllTestsCompleted(allFilled);
+    }
+  }, [categoryResults, selectedVisit]);
+
   const submitLabResult = async () => {
-    if (!result.trim()) {
-      toast.error("Lab result is required");
+    if (!allTestsCompleted) {
+      toast.error("Please complete all test results before submitting");
       return;
     }
 
     setLoading(true);
     try {
+      const results = Object.entries(categoryResults).flatMap(
+        ([category, tests]) => 
+          tests.map(test => ({
+            category,
+            testName: test.testName,
+            result: test.result,
+            normalRange: test.normalRange
+          }))
+      );
+
       const res = await fetch(
         `/api/clinic/laboratory/submit/${selectedVisit?.id}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ result, notes }),
+          body: JSON.stringify({ results, notes }),
         }
       );
 
@@ -100,7 +154,7 @@ export default function LabPanel() {
         toast.success("Lab result submitted successfully!");
         setVisits((prev) => prev.filter((v) => v.id !== selectedVisit?.id));
         setSelectedVisit(null);
-        setResult("");
+        setCategoryResults({});
         setNotes("");
       } else {
         toast.error("Failed to submit lab result");
@@ -114,8 +168,28 @@ export default function LabPanel() {
 
   const handleVisitSelect = (visit: Visit) => {
     setSelectedVisit(visit);
-    setResult("");
+    setCategoryResults({});
     setNotes("");
+  };
+
+  const handleTestResultChange = (
+    category: string,
+    testIndex: number,
+    field: "result" | "normalRange",
+    value: string
+  ) => {
+    setCategoryResults(prev => {
+      const updatedCategory = [...prev[category]];
+      updatedCategory[testIndex] = {
+        ...updatedCategory[testIndex],
+        [field]: value
+      };
+      
+      return {
+        ...prev,
+        [category]: updatedCategory
+      };
+    });
   };
 
   return (
@@ -166,10 +240,10 @@ export default function LabPanel() {
                             </div>
                             <div>
                               <p className="font-medium text-gray-900 dark:text-white">
-                                Name: {visit?.studentInfo?.fullName}
+                                {visit?.studentInfo?.fullName}
                               </p>
-                              <p className="text-gray-900 dark:text-white">
-                                ID : {visit.studentId}
+                              <p className="text-sm text-gray-600 dark:text-gray-300">
+                                ID: {visit.studentId}
                               </p>
                               <p className="text-sm text-gray-600 dark:text-gray-300">
                                 Test: {visit.reason}
@@ -188,6 +262,35 @@ export default function LabPanel() {
                             </p>
                           </div>
                         </div>
+                        
+                        {visit.doctorNote?.labTests && (
+                          <div className="mt-3">
+                            <p className="text-xs font-semibold text-purple-600 dark:text-purple-400">
+                              Requested Tests:
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {visit.doctorNote.labTests.flatMap(category => 
+                                category.tests
+                              ).slice(0, 3).map(test => (
+                                <span 
+                                  key={test} 
+                                  className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 px-2 py-1 rounded"
+                                >
+                                  {test}
+                                </span>
+                              ))}
+                              {visit.doctorNote.labTests.flatMap(category => 
+                                category.tests
+                              ).length > 3 && (
+                                <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 px-2 py-1 rounded">
+                                  +{visit.doctorNote.labTests.flatMap(category => 
+                                    category.tests
+                                  ).length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -292,69 +395,122 @@ export default function LabPanel() {
 
                       <Separator />
 
-                      {/* Lab Result Form */}
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="result"
-                            className="flex items-center space-x-2"
-                          >
-                            <TestTube className="w-4 h-4 text-purple-500" />
-                            <span>Lab Result *</span>
-                          </Label>
-                          <Textarea
-                            id="result"
-                            value={result}
-                            onChange={(e) => setResult(e.target.value)}
-                            placeholder="Enter detailed lab test results, measurements, observations..."
-                            className="min-h-[120px] resize-none"
-                            required
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="notes"
-                            className="flex items-center space-x-2"
-                          >
-                            <FileText className="w-4 h-4 text-gray-500" />
-                            <span>Additional Notes</span>
-                          </Label>
-                          <Textarea
-                            id="notes"
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Any additional observations, recommendations, or technical notes..."
-                            className="min-h-[80px] resize-none"
-                          />
-                        </div>
-
-                        <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                          <AlertCircle className="w-4 h-4 text-blue-500" />
-                          <p className="text-sm text-blue-600 dark:text-blue-400">
-                            Please ensure all test results are accurate before
-                            submission. Results will be sent directly to the
-                            attending physician.
-                          </p>
-                        </div>
-
-                        <Button
-                          onClick={submitLabResult}
-                          disabled={loading || !result.trim()}
-                          className="w-full bg-purple-500 hover:bg-purple-600 text-white h-12 text-lg font-medium"
-                        >
-                          {loading ? (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              <span>Submitting Results...</span>
+                      {/* Lab Test Forms */}
+                      <div className="space-y-8">
+                        {selectedVisit.doctorNote?.labTests?.map((category) => (
+                          <div key={category.category} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                              {category.category}
+                            </h3>
+                            
+                            <div className="overflow-x-auto">
+                              <table className="w-full">
+                                <thead>
+                                  <tr className="bg-gray-50 dark:bg-gray-800">
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                      Test
+                                    </th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                      Result
+                                    </th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                      Normal Range
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                  {categoryResults[category.category]?.map((testResult, testIndex) => (
+                                    <tr key={`${category.category}-${testResult.testName}`}>
+                                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                        {testResult.testName}
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap">
+                                        <Input
+                                          value={testResult.result}
+                                          onChange={(e) => 
+                                            handleTestResultChange(
+                                              category.category, 
+                                              testIndex, 
+                                              "result", 
+                                              e.target.value
+                                            )
+                                          }
+                                          placeholder="Enter result"
+                                          className="w-full"
+                                        />
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap">
+                                        <Input
+                                          value={testResult.normalRange}
+                                          onChange={(e) => 
+                                            handleTestResultChange(
+                                              category.category, 
+                                              testIndex, 
+                                              "normalRange", 
+                                              e.target.value
+                                            )
+                                          }
+                                          placeholder="Normal range"
+                                          className="w-full"
+                                        />
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
                             </div>
-                          ) : (
-                            <div className="flex items-center space-x-2">
-                              <Send className="w-5 h-5" />
-                              <span>Submit Lab Results</span>
-                            </div>
-                          )}
-                        </Button>
+                          </div>
+                        ))}
+
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="notes"
+                              className="flex items-center space-x-2"
+                            >
+                              <FileText className="w-4 h-4 text-gray-500" />
+                              <span>Additional Notes</span>
+                            </Label>
+                            <Textarea
+                              id="notes"
+                              value={notes}
+                              onChange={(e) => setNotes(e.target.value)}
+                              placeholder="Any additional observations, recommendations, or technical notes..."
+                              className="min-h-[80px] resize-none"
+                            />
+                          </div>
+
+                          <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <AlertCircle className="w-4 h-4 text-blue-500" />
+                            <p className="text-sm text-blue-600 dark:text-blue-400">
+                              Please ensure all test results are accurate before
+                              submission. Results will be sent directly to the
+                              attending physician.
+                            </p>
+                          </div>
+
+                          <Button
+                            onClick={submitLabResult}
+                            disabled={loading || !allTestsCompleted}
+                            className={`w-full h-12 text-lg font-medium ${
+                              allTestsCompleted 
+                                ? "bg-purple-500 hover:bg-purple-600 text-white"
+                                : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                            }`}
+                          >
+                            {loading ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Submitting Results...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <Send className="w-5 h-5" />
+                                <span>Submit Lab Results</span>
+                              </div>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </>
                   )}

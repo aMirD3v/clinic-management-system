@@ -94,7 +94,7 @@ const onSubmit = async (data: FormData) => {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center">
-                <img src={"public/jju-logo.jpg"}/>
+                <img src={"/jju-logo.jpg"}/>
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Jigjiga University</h1>

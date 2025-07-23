@@ -1,19 +1,20 @@
+// app/api/clinic/laboratory/submit/[id]/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-const visitId = (await params).id;
+  const visitId = params.id;
   const body = await req.json();
-  const { result, notes } = body;
+  const { results, notes } = body;
 
   try {
     await prisma.labResult.create({
       data: {
         visitId,
-        result,
+        results: JSON.stringify(results), // Store as JSON string
         notes,
       },
     });

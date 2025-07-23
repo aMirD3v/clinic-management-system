@@ -88,6 +88,7 @@ model DoctorNote {
   diagnosis       String
   prescription    String?
   requestLabTest  Boolean
+  labTests        Json?    
   notes           String?
 }
 
@@ -95,7 +96,7 @@ model LabResult {
   id        String   @id @default(uuid())
   visitId   String   @unique
   visit     Visit    @relation(fields: [visitId], references: [id])
-  result    String
+  results   Json     
   notes     String?
 }
 

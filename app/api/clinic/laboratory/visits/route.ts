@@ -1,3 +1,5 @@
+// app/api/clinic/laboratory/visits/route.ts
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -10,6 +12,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       include: {
         studentInfo: true,
+         doctorNote: true,
       },
     });
 

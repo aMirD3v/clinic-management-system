@@ -1,3 +1,4 @@
+// app/(clinic)/clinic/doctor/page.tsx
 "use client";
 
 import type React from "react";
@@ -63,7 +64,7 @@ type Visit = {
     notes?: string;
   };
   labResult?: {
-    result: string;
+    results: string; // JSON string
     notes?: string;
   };
   studentInfo?: {
@@ -78,16 +79,132 @@ type Visit = {
   };
 };
 
+type LabTestCategory = {
+  id: string;
+  name: string;
+  tests: LabTest[];
+};
+
+type LabTest = {
+  id: string;
+  name: string;
+  selected: boolean;
+};
+
+// grouped lab-result types
+type LabTestResult = {
+  testName: string;
+  result: string;
+  normalRange: string;
+};
+type LabResultCategory = {
+  category: string;
+  tests: LabTestResult[];
+};
+
 export default function DoctorPanel() {
   const [visits, setVisits] = useState<Visit[]>([]);
   const [filteredVisits, setFilteredVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submittingVisits, setSubmittingVisits] = useState<Set<string>>(
-    new Set()
-  );
+  const [submittingVisits, setSubmittingVisits] = useState<Set<string>>(new Set());
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [labTests, setLabTests] = useState<LabTestCategory[]>([]);
+  const [requestLabTestChecked, setRequestLabTestChecked] = useState(false);
+  const [parsedLabResults, setParsedLabResults] = useState<LabResultCategory[] | null>(null);
 
+  /* ------------------------------------------------------------------ */
+  /*  Lab-test catalogue                                                */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    const initialLabTests: LabTestCategory[] = [
+      {
+        id: "hematology",
+        name: "HEMOTOLOGY & ODER REPORT FORM",
+        tests: [
+          { id: "rbc", name: "RBC", selected: false },
+          { id: "hemoglobin", name: "Hemoglobin", selected: false },
+          { id: "hematocrit", name: "Hematocrit", selected: false },
+          { id: "mcv", name: "MCV", selected: false },
+          { id: "mch", name: "MCH", selected: false },
+          { id: "mchc", name: "MCHC", selected: false },
+          { id: "wbc", name: "WBC", selected: false },
+          { id: "differential", name: "Differential", selected: false },
+          { id: "lymphocyte", name: "Lymphocyte", selected: false },
+          { id: "eosinophil", name: "Eosinophil", selected: false },
+          { id: "basophil", name: "Basophil", selected: false },
+          { id: "monocyte", name: "Monocyte", selected: false },
+          { id: "esr", name: "ESR", selected: false },
+          { id: "platelet_count", name: "Platelet Count", selected: false },
+          { id: "bleeding_time", name: "Bleeding Time", selected: false },
+          { id: "clot_retraction", name: "Clot Retraction", selected: false },
+          { id: "coagulation_time", name: "Coagulation Time", selected: false },
+          { id: "pt", name: "PT", selected: false },
+          { id: "ptt", name: "PTT", selected: false },
+          { id: "inr", name: "INR", selected: false },
+          { id: "fibrinogen", name: "Fibrinogen", selected: false },
+          { id: "d_dimer", name: "D-Dimer", selected: false },
+          { id: "cd4", name: "CD4 (Absolute)", selected: false },
+          { id: "blood_films", name: "Blood Films", selected: false },
+          { id: "p_morphology", name: "P. Morphology", selected: false },
+          { id: "blood_group", name: "Blood Group & Rh", selected: false },
+          { id: "gross_match", name: "Gross Match", selected: false },
+        ],
+      },
+      {
+        id: "serology",
+        name: "SEROLOGY & ORDER REPORT FORM",
+        tests: [
+          { id: "vdrl", name: "VDRL", selected: false },
+          { id: "rpr", name: "RPR", selected: false },
+          { id: "widal", name: "WIDAL", selected: false },
+          { id: "weil_felix", name: "WEIL-FELIX", selected: false },
+          { id: "hbs_ag", name: "HBs Ag", selected: false },
+          { id: "hcv_ab", name: "HCV-Ab", selected: false },
+        ],
+      },
+      {
+        id: "urine",
+        name: "URINE & ODER REPORT FORM",
+        tests: [
+          { id: "colour", name: "COLOUR", selected: false },
+          { id: "appearance", name: "APPEARANCE", selected: false },
+          { id: "blood", name: "BLOOD", selected: false },
+          { id: "bitrubin", name: "BITRUBIN", selected: false },
+          { id: "urobilinogen", name: "UROBILINOGEN", selected: false },
+          { id: "ketone", name: "KETONE", selected: false },
+          { id: "albumin", name: "ALBUMIN", selected: false },
+          { id: "netrite", name: "NETRITE", selected: false },
+          { id: "ph", name: "PH", selected: false },
+          { id: "sp_gravity", name: "SP.GRAVITY", selected: false },
+          { id: "leucocyte", name: "LEUCOCYTE", selected: false },
+          { id: "pus_cells", name: "PUS CELLS/Wbe", selected: false },
+          { id: "rbc1", name: "RBC", selected: false },
+          { id: "casts", name: "Casts", selected: false },
+          { id: "others", name: "Others", selected: false },
+        ],
+      },
+      {
+        id: "stool",
+        name: "STOOL EXAM ORDER AND REPORT FORM",
+        tests: [
+          { id: "appearance1", name: "Appearance", selected: false },
+          { id: "consistency", name: "Consistency", selected: false },
+          { id: "mucus", name: "Mucus", selected: false },
+          { id: "plus_cells", name: "Plus Cells", selected: false },
+          { id: "gross_blood", name: "Gross Blood", selected: false },
+          { id: "occult_blood", name: "Occult Blood", selected: false },
+          { id: "ova_larvac", name: "Ova/Larvac of parasite", selected: false },
+          { id: "bacteria", name: "Bacteria", selected: false },
+        ],
+      },
+    ];
+    setLabTests(initialLabTests);
+  }, []);
+
+  /* ------------------------------------------------------------------ */
+  /*  Fetch visits                                                      */
+  /* ------------------------------------------------------------------ */
   useEffect(() => {
     fetchData();
   }, []);
@@ -110,6 +227,49 @@ export default function DoctorPanel() {
     }
   }, [searchTerm, visits]);
 
+  /* ------------------------------------------------------------------ */
+  /*  Parse / group lab results                                         */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (selectedVisit?.labResult?.results) {
+      try {
+        // flat structure -> grouped
+        const flat: Array<{
+          category: string;
+          testName: string;
+          result: string;
+          normalRange: string;
+        }> = JSON.parse(selectedVisit.labResult.results);
+
+        const grouped: LabResultCategory[] = flat.reduce<LabResultCategory[]>(
+          (acc, cur) => {
+            let cat = acc.find((c) => c.category === cur.category);
+            if (!cat) {
+              cat = { category: cur.category, tests: [] };
+              acc.push(cat);
+            }
+            cat.tests.push({
+              testName: cur.testName,
+              result: cur.result,
+              normalRange: cur.normalRange,
+            });
+            return acc;
+          },
+          []
+        );
+        setParsedLabResults(grouped);
+      } catch (error) {
+        console.error("Failed to parse / group lab results:", error);
+        setParsedLabResults(null);
+      }
+    } else {
+      setParsedLabResults(null);
+    }
+  }, [selectedVisit]);
+
+  /* ------------------------------------------------------------------ */
+  /*  Helpers                                                           */
+  /* ------------------------------------------------------------------ */
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -124,13 +284,27 @@ export default function DoctorPanel() {
     }
   };
 
+  const handleTestChange = (categoryId: string, testId: string) => {
+    setLabTests((prev) =>
+      prev.map((category) =>
+        category.id === categoryId
+          ? {
+              ...category,
+              tests: category.tests.map((test) =>
+                test.id === testId ? { ...test, selected: !test.selected } : test
+              ),
+            }
+          : category
+      )
+    );
+  };
+
   const handleSubmit = async (
     e: React.FormEvent<HTMLFormElement>,
     visitId: string
   ) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-
     const diagnosis = formData.get("diagnosis") as string;
     if (!diagnosis?.trim()) {
       toast.error("Please enter a diagnosis");
@@ -140,9 +314,17 @@ export default function DoctorPanel() {
     setSubmittingVisits((prev) => new Set(prev).add(visitId));
 
     const payload = {
-      diagnosis: diagnosis,
+      diagnosis,
       prescription: formData.get("prescription"),
       requestLabTest: formData.get("requestLabTest") === "on",
+      labTests: labTests
+        .map((category) => ({
+          category: category.name,
+          tests: category.tests
+            .filter((test) => test.selected)
+            .map((test) => test.name),
+        }))
+        .filter((c) => c.tests.length > 0),
       notes: formData.get("notes"),
     };
 
@@ -155,8 +337,8 @@ export default function DoctorPanel() {
 
       if (res.ok) {
         toast.success("Diagnosis submitted successfully!");
-        fetchData(); // Refresh the data
-        setSelectedVisit(null); // Return to list view
+        fetchData();
+        setSelectedVisit(null);
       } else {
         toast.error("Failed to submit diagnosis");
       }
@@ -171,6 +353,9 @@ export default function DoctorPanel() {
     }
   };
 
+  /* ------------------------------------------------------------------ */
+  /*  Render                                                            */
+  /* ------------------------------------------------------------------ */
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
@@ -188,7 +373,9 @@ export default function DoctorPanel() {
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!selectedVisit ? (
-          /* Visits List View */
+          /* ----------------------------------------------------------
+             Visits List View
+          -----------------------------------------------------------*/
           <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -284,10 +471,7 @@ export default function DoctorPanel() {
                             <div className="flex items-center space-x-2">
                               <Clock className="w-4 h-4 text-gray-400" />
                               <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {format(
-                                  new Date(visit.createdAt),
-                                  "MMM dd, HH:mm"
-                                )}
+                                {format(new Date(visit.createdAt), "MMM dd, HH:mm")}
                               </span>
                             </div>
                             {visit.nurseNote && (
@@ -312,7 +496,9 @@ export default function DoctorPanel() {
             </CardContent>
           </Card>
         ) : (
-          /* Detailed Visit View */
+          /* ----------------------------------------------------------
+             Detailed Visit View
+          -----------------------------------------------------------*/
           <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm overflow-hidden">
             <CardHeader className="border-b border-sky-100 dark:border-sky-800">
               <div className="flex items-center justify-between">
@@ -322,8 +508,7 @@ export default function DoctorPanel() {
                     <span>Patient Consultation</span>
                   </CardTitle>
                   <CardDescription>
-                    {selectedVisit.studentInfo?.fullName ||
-                      selectedVisit.studentId}
+                    {selectedVisit.studentInfo?.fullName || selectedVisit.studentId}
                   </CardDescription>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -333,10 +518,7 @@ export default function DoctorPanel() {
                   >
                     <Clock className="w-3 h-3" />
                     <span>
-                      {format(
-                        new Date(selectedVisit.createdAt),
-                        "MMM dd, hh:mm a"
-                      )}
+                      {format(new Date(selectedVisit.createdAt), "MMM dd, hh:mm a")}
                     </span>
                   </Badge>
                   <Button
@@ -357,10 +539,7 @@ export default function DoctorPanel() {
                 <div className="flex-shrink-0">
                   {selectedVisit.studentInfo?.profileImageUrl ? (
                     <img
-                      src={
-                        selectedVisit.studentInfo.profileImageUrl ||
-                        "/placeholder.svg"
-                      }
+                      src={selectedVisit.studentInfo.profileImageUrl}
                       alt="Patient photo"
                       className="rounded-lg object-cover border-2 border-white shadow-lg w-20 h-24"
                     />
@@ -370,11 +549,6 @@ export default function DoctorPanel() {
                     </div>
                   )}
                 </div>
-                {selectedVisit.labResult && (
-                  <span className="absolute top-40 right-10 inline-block bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
-                    Lab Result
-                  </span>
-                )}
 
                 <div className="flex-1 space-y-4">
                   <div>
@@ -492,8 +666,7 @@ export default function DoctorPanel() {
                   {selectedVisit.nurseNote.notes && (
                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>Nurse Notes:</strong>{" "}
-                        {selectedVisit.nurseNote.notes}
+                        <strong>Nurse Notes:</strong> {selectedVisit.nurseNote.notes}
                       </p>
                     </div>
                   )}
@@ -507,17 +680,59 @@ export default function DoctorPanel() {
                     <TestTube className="w-5 h-5" />
                     <span>Laboratory Results</span>
                   </h3>
-                  <div className="space-y-3">
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
-                      {selectedVisit.labResult.result}
-                    </p>
-                    {selectedVisit.labResult.notes && (
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        <strong>Lab Notes:</strong>{" "}
-                        {selectedVisit.labResult.notes}
+
+                  {parsedLabResults?.length ? (
+                    <div className="space-y-6">
+                      {parsedLabResults.map((category, index) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <h4 className="font-bold mb-3 text-blue-800 dark:text-blue-200">
+                            {category.category}
+                          </h4>
+
+                          {Array.isArray(category.tests) && category.tests.length ? (
+                            <table className="w-full">
+                              <thead>
+                                <tr className="border-b">
+                                  <th className="text-left pb-2 text-sm font-medium">Test</th>
+                                  <th className="text-left pb-2 text-sm font-medium">Result</th>
+                                  <th className="text-left pb-2 text-sm font-medium">Normal Range</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {category.tests.map((test, testIndex) => (
+                                  <tr key={testIndex} className="border-b">
+                                    <td className="py-3 text-sm">{test.testName}</td>
+                                    <td className="py-3 text-sm font-medium">{test.result}</td>
+                                    <td className="py-3 text-sm text-gray-500 dark:text-gray-400">
+                                      {test.normalRange}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              No tests in this category.
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        {selectedVisit.labResult.results}
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  {selectedVisit.labResult.notes && (
+                    <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Lab Notes:</strong> {selectedVisit.labResult.notes}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -578,19 +793,58 @@ export default function DoctorPanel() {
                     className="min-h-[100px] resize-none"
                   />
                 </div>
+
                 {selectedVisit.labResult ? null : (
-                  <div className="flex items-center space-x-2 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                    <Checkbox
-                      id={`lab-${selectedVisit.id}`}
-                      name="requestLabTest"
-                    />
-                    <Label
-                      htmlFor={`lab-${selectedVisit.id}`}
-                      className="flex items-center space-x-2 cursor-pointer"
-                    >
-                      <TestTube className="w-4 h-4 text-purple-500" />
-                      <span>Request Laboratory Test</span>
-                    </Label>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                      <Checkbox
+                        id={`lab-${selectedVisit.id}`}
+                        name="requestLabTest"
+                        checked={requestLabTestChecked}
+                        onCheckedChange={(checked) => setRequestLabTestChecked(!!checked)}
+                      />
+                      <Label
+                        htmlFor={`lab-${selectedVisit.id}`}
+                        className="flex items-center space-x-2 cursor-pointer"
+                      >
+                        <TestTube className="w-4 h-4 text-purple-500" />
+                        <span>Request Laboratory Test</span>
+                      </Label>
+                    </div>
+
+                    {requestLabTestChecked && (
+                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                        <h4 className="font-medium mb-4 text-gray-900 dark:text-white">
+                          Select Tests to Request
+                        </h4>
+
+                        <div className="space-y-6">
+                          {labTests.map((category) => (
+                            <div key={category.id} className="space-y-3">
+                              <h5 className="font-medium text-gray-900 dark:text-white">
+                                {category.name}
+                              </h5>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {category.tests.map((test) => (
+                                  <div key={test.id} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`test-${test.id}`}
+                                      checked={test.selected}
+                                      onCheckedChange={() =>
+                                        handleTestChange(category.id, test.id)
+                                      }
+                                    />
+                                    <Label htmlFor={`test-${test.id}`} className="text-sm">
+                                      {test.name}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
