@@ -65,6 +65,7 @@ model Visit {
   nurseNote        NurseNote?
   doctorNote       DoctorNote?
   labResult        LabResult?
+  pharmacyNote     PharmacyNote?
 
   assignedDoctor   User?        @relation("DoctorAssigned", fields: [assignedDoctorId], references: [id])
 }
@@ -109,4 +110,36 @@ enum VisitStatus {
   COMPLETED
 }
 
+model Stock {
+  id             String         @id @default(uuid())
+  medicineName   String         @unique
+  description    String?
+  batchNumber    String?         @unique
+  manufacturer   String?
+  quantity       Int
+  unit           String         // e.g. "mg", "ml", "tablet"
+  price          Float?
+  costPrice      Float?         // optional: for profit margin tracking
+  expiryDate     DateTime
+  manufactureDate DateTime?
+  reorderLevel   Int?           // minimum quantity before restocking
+  maxStockLevel  Int?           // maximum desired quantity
+  storageLocation String?       // e.g., "Shelf A3", "Cold Storage"
+  isActive       Boolean        @default(true) // for marking discontinued stock
+  notes          String?        // general remarks
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
+  pharmacyNotes  PharmacyNote[]
+}
+
+model PharmacyNote {
+  id        String   @id @default(uuid())
+  visitId   String   @unique
+  visit     Visit    @relation(fields: [visitId], references: [id])
+  stockId   String
+  stock     Stock    @relation(fields: [stockId], references: [id])
+  quantity  Int
+  notes     String?
+  createdAt DateTime @default(now())
+}

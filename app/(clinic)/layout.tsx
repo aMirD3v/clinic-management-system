@@ -27,13 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-        <AuthSessionProvider>
-          <Navbar />
-          <ThemeProvider>
-            {children}
-            <Toaster position="top-center" />
-          </ThemeProvider>
-        </AuthSessionProvider>
-      
+    <AuthSessionProvider>
+      <Navbar />
+      <ThemeProvider>
+        {children}
+        <Toaster position="top-center" />
+      </ThemeProvider>
+    </AuthSessionProvider>
   );
 }
