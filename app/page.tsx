@@ -23,6 +23,9 @@ export default async function Home() {
       case "PHARMACY":
         redirect("/clinic/pharmacy");
         break;
+      case "STOCK_MANAGER":
+        redirect("/stock-manager");
+        break;
       default:
         // fallback, could redirect to a generic dashboard or logout
         redirect("/login");

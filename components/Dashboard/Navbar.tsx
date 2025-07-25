@@ -23,14 +23,20 @@ import {
   User,
   Shield,
   HelpCircle,
+  Bell,
 } from "lucide-react"
 import Image from "next/image"
+import useSWR from "swr"
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { data: notifications } = useSWR("/api/notifications", fetcher);
+
+  const unreadNotifications = notifications?.filter((n: any) => !n.read).length;
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -40,6 +46,8 @@ export function Navbar() {
  const currentPageTitle = () => {
     const routes: Record<string, string> = {
       "/admin": "Dashboard",
+      "/stock-manager": "Stock Management",
+      "/stock-manager/notifications": "Notifications",
     }
     return routes[pathname] || ""
   }
@@ -66,6 +74,17 @@ export function Navbar() {
             <div className="flex items-center space-x-3">
               {/* Theme Toggle */}
               <ThemeToggle />
+              {/* Notifications */}
+              <Link href="/stock-manager/notifications">
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="w-5 h-5" />
+                  {unreadNotifications > 0 && (
+                    <Badge className="absolute top-0 right-0 h-5 w-5 flex items-center justify-center rounded-full bg-red-500 text-white">
+                      {unreadNotifications}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
               {/* User Profile */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

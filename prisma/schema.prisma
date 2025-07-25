@@ -27,11 +27,14 @@ model User {
 }
 
 enum Role {
+  ADMIN
   RECEPTION
   NURSE
   DOCTOR
   LABORATORY
   PHARMACY
+  GENERAL_STAFF
+  STOCK_MANAGER
 }
 
 model StudentInfo {
@@ -131,6 +134,7 @@ model Stock {
   updatedAt      DateTime       @updatedAt
 
   pharmacyNotes  PharmacyNote[]
+  activities     StockActivity[]
 }
 
 model PharmacyNote {
@@ -141,5 +145,22 @@ model PharmacyNote {
   stock     Stock    @relation(fields: [stockId], references: [id])
   quantity  Int
   notes     String?
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model StockActivity {
+  id        String   @id @default(uuid())
+  stockId   String
+  stock     Stock    @relation(fields: [stockId], references: [id])
+  activity  String
+  details   Json?
   createdAt DateTime @default(now())
 }

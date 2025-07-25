@@ -17,7 +17,19 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { username: "stockmanager1" },
+    update: {},
+    create: {
+      username: "stockmanager1",
+      password,
+      name: "Stock Manager",
+      role: "STOCK_MANAGER",
+    },
+  });
+
   console.log("✅ Seeded reception1 / admin123");
+  console.log("✅ Seeded stockmanager1 / admin123");
 }
 
 main()

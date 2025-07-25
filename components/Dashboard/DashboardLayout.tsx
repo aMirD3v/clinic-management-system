@@ -275,11 +275,15 @@ export default function DashboardLayout({
           )}
 
           {role === "staff" && (
+            <h1>hello</h1>
+          )}
+
+          {role === "STOCK_MANAGER" && (
             <>
               <Link
-                href="/dashboard/staff"
+                href="/stock-manager/dashboard"
                 onClick={() => setSidebarOpen(false)}
-                className={linkClass("/dashboard/staff")}
+                className={linkClass("/stock-manager/dashboard")}
               >
                 <svg
                   className="w-5 h-5 mr-3"
@@ -293,14 +297,19 @@ export default function DashboardLayout({
                     strokeWidth={2}
                     d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
                   />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 5a2 2 0 012-2h4a2 2 0 012 2v0a2 2 0 01-2 2H10a2 2 0 01-2-2v0z"
+                  />
                 </svg>
-                Staff Dashboard
+                Dashboard
               </Link>
-
               <Link
-                href="/dashboard/gate"
+                href="/stock-manager/stock"
                 onClick={() => setSidebarOpen(false)}
-                className={linkClass("/dashboard/gate")}
+                className={linkClass("/stock-manager/stock")}
               >
                 <svg
                   className="w-5 h-5 mr-3"
@@ -312,16 +321,15 @@ export default function DashboardLayout({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H7a2 2 0 00-2 2v2m7-7h.01"
                   />
                 </svg>
-                Gate Management
+                Stock
               </Link>
-
               <Link
-                href="/dashboard/cafeteria"
+                href="/stock-manager/notifications"
                 onClick={() => setSidebarOpen(false)}
-                className={linkClass("/dashboard/cafeteria")}
+                className={linkClass("/stock-manager/notifications")}
               >
                 <svg
                   className="w-5 h-5 mr-3"
@@ -333,31 +341,10 @@ export default function DashboardLayout({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    d="M15 17l-3 3m0 0l-3-3m3 3V4m0 16a2 2 0 01-2-2h-3a2 2 0 00-2 2v2a2 2 0 002 2h3a2 2 0 002-2v-2a2 2 0 00-2-2z"
                   />
                 </svg>
-                Cafeteria Management
-              </Link>
-
-              <Link
-                href="/dashboard/library"
-                onClick={() => setSidebarOpen(false)}
-                className={linkClass("/dashboard/library")}
-              >
-                <svg
-                  className="w-5 h-5 mr-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
-                  />
-                </svg>
-                Library Management
+                Notifications
               </Link>
             </>
           )}
