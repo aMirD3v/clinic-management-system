@@ -2,8 +2,8 @@ import React from 'react'
 
 const AdminPage = () => {
   return (
-    <div>
-        <h1>Admin</h1>
+    <div className='flex-1 justify-center items-center'>
+        <h1>Stock</h1>
     </div>
   )
 }

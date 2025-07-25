@@ -1,10 +1,8 @@
 // app/(clinic)/clinic/doctor/page.tsx
 "use client";
-
 import type React from "react";
-
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns"; // Import parseISO for safer date parsing
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,36 +45,122 @@ import {
   ClipboardList,
   ArrowLeft,
   Search,
+  CalendarDays, // Added
+  CheckCircle, // Added
+  Beaker, // Added
+  WeightIcon, // Added (if different from Weight)
 } from "lucide-react";
 import toast from "react-hot-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"; // Make sure this component exists
 
-type Visit = {
+// --- Updated/Extended Types ---
+// Enhance the Visit type to match the data fetched by the updated API route for the *current* visit
+type DetailedVisit = {
   id: string;
   studentId: string;
   reason: string;
   status: string;
-  createdAt: string;
-  nurseNote?: {
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
+  assignedDoctorId: string | null;
+  // Include full related data fetched by the API
+  studentInfo: {
+    id: string;
+    studentId: string;
+    fullName: string;
+    gender: string;
+    age: number | null;
+    email: string | null;
+    phone: string | null;
+    college: string | null;
+    department: string | null;
+    profileImageUrl: string | null;
+    createdAt: string; // ISO string
+    updatedAt: string; // ISO string
+  } | null;
+  nurseNote: {
+    id: string;
+    visitId: string;
     bloodPressure: string;
     temperature: string;
     pulse: string;
     weight: string;
-    notes?: string;
-  };
-  labResult?: {
+    notes: string | null;
+    createdAt: string; // ISO string
+    updatedAt: string; // ISO string
+  } | null;
+  doctorNote: {
+    id: string;
+    visitId: string;
+    diagnosis: string;
+    prescription: string | null;
+    requestLabTest: boolean;
+    labTests: string | null; // JSON string
+    notes: string | null;
+    createdAt: string; // ISO string
+    updatedAt: string; // ISO string
+  } | null;
+  labResult: {
+    id: string;
+    visitId: string;
     results: string; // JSON string
-    notes?: string;
-  };
-  studentInfo?: {
-    fullName: string;
-    profileImageUrl?: string;
-    gender: string;
-    age: number;
-    phone: string;
-    email: string;
-    college: string;
-    department: string;
-  };
+    notes: string | null;
+    createdAt: string; // ISO string
+    updatedAt: string; // ISO string
+  } | null;
+  pharmacyNote: {
+    id: string;
+    visitId: string;
+    stockId: string;
+    quantity: number;
+    notes: string | null;
+    createdAt: string; // ISO string
+    updatedAt: string; // ISO string
+    stock: {
+      medicineName: string;
+      description: string | null;
+      unit: string;
+    } | null;
+  } | null;
+  // assignedDoctor: { id: string; name: string } | null; // Add if included
+};
+
+// Type for previous visits fetched
+type PreviousVisitSummary = {
+  id: string;
+  studentId: string;
+  reason: string;
+  status: string;
+  createdAt: string; // ISO string
+  doctorNote: {
+    diagnosis: string;
+    prescription: string | null;
+    createdAt: string; // ISO string
+  } | null;
+  nurseNote: {
+    bloodPressure: string;
+    temperature: string;
+    pulse: string;
+    weight: string;
+    createdAt: string; // ISO string
+  } | null;
+  labResult: {
+    id: string;
+    createdAt: string; // ISO string
+  } | null;
+  pharmacyNote: {
+    id: string;
+    createdAt: string; // ISO string
+    stock: {
+      medicineName: string;
+    } | null;
+  } | null;
+  // assignedDoctor: { name: string } | null; // Add if included
 };
 
 type LabTestCategory = {
@@ -97,21 +181,46 @@ type LabTestResult = {
   result: string;
   normalRange: string;
 };
+
 type LabResultCategory = {
   category: string;
   tests: LabTestResult[];
 };
+// --- End Updated/Extended Types ---
+
+// Helper to safely format dates
+const safeFormatDate = (
+  dateString: string | undefined,
+  formatString: string = "MMM dd, yyyy HH:mm"
+) => {
+  if (!dateString) return "N/A";
+  try {
+    return format(parseISO(dateString), formatString);
+  } catch (e) {
+    console.error("Error formatting date:", dateString, e);
+    return "Invalid Date";
+  }
+};
 
 export default function DoctorPanel() {
-  const [visits, setVisits] = useState<Visit[]>([]);
-  const [filteredVisits, setFilteredVisits] = useState<Visit[]>([]);
+  const [visits, setVisits] = useState<DetailedVisit[]>([]); // Changed type
+  const [filteredVisits, setFilteredVisits] = useState<DetailedVisit[]>([]); // Changed type
   const [loading, setLoading] = useState(true);
-  const [submittingVisits, setSubmittingVisits] = useState<Set<string>>(new Set());
-  const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
+  const [submittingVisits, setSubmittingVisits] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedVisit, setSelectedVisit] = useState<DetailedVisit | null>(
+    null
+  ); // Changed type
   const [searchTerm, setSearchTerm] = useState("");
   const [labTests, setLabTests] = useState<LabTestCategory[]>([]);
   const [requestLabTestChecked, setRequestLabTestChecked] = useState(false);
-  const [parsedLabResults, setParsedLabResults] = useState<LabResultCategory[] | null>(null);
+  const [parsedLabResults, setParsedLabResults] = useState<
+    LabResultCategory[] | null
+  >(null);
+  const [previousVisitsForPatient, setPreviousVisitsForPatient] = useState<
+    PreviousVisitSummary[]
+  >([]); // NEW STATE
 
   /* ------------------------------------------------------------------ */
   /*  Lab-test catalogue                                                */
@@ -203,10 +312,10 @@ export default function DoctorPanel() {
   }, []);
 
   /* ------------------------------------------------------------------ */
-  /*  Fetch visits                                                      */
+  /*  Fetch visits (List View)                                          */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    fetchData();
+    fetchData(); // Fetch initial list of visits awaiting doctor
   }, []);
 
   useEffect(() => {
@@ -228,7 +337,7 @@ export default function DoctorPanel() {
   }, [searchTerm, visits]);
 
   /* ------------------------------------------------------------------ */
-  /*  Parse / group lab results                                         */
+  /*  Parse / group lab results (for current visit display)             */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
     if (selectedVisit?.labResult?.results) {
@@ -240,7 +349,6 @@ export default function DoctorPanel() {
           result: string;
           normalRange: string;
         }> = JSON.parse(selectedVisit.labResult.results);
-
         const grouped: LabResultCategory[] = flat.reduce<LabResultCategory[]>(
           (acc, cur) => {
             let cat = acc.find((c) => c.category === cur.category);
@@ -273,14 +381,35 @@ export default function DoctorPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/clinic/doctor/visits");
+      const res = await fetch("/api/clinic/doctor/visits"); // Fetches list for the view
       const data = await res.json();
       setVisits(data);
       setFilteredVisits(data);
     } catch (error) {
       toast.error("Failed to load patient data");
+      console.error("Fetch data error:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // NEW: Function to fetch detailed visit data (including previous visits)
+  const fetchDetailedVisit = async (visitId: string) => {
+    try {
+      const res = await fetch(`/api/clinic/doctor/${visitId}`);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to load visit details");
+      }
+      const data = await res.json();
+      // Assuming the API now returns { visit: DetailedVisit, previousVisits: PreviousVisitSummary[] }
+      setSelectedVisit(data.visit); // Set the detailed visit
+      setPreviousVisitsForPatient(data.previousVisits); // Set the previous visits
+    } catch (error) {
+      console.error("Error fetching detailed visit:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load visit details"
+      );
     }
   };
 
@@ -291,7 +420,9 @@ export default function DoctorPanel() {
           ? {
               ...category,
               tests: category.tests.map((test) =>
-                test.id === testId ? { ...test, selected: !test.selected } : test
+                test.id === testId
+                  ? { ...test, selected: !test.selected }
+                  : test
               ),
             }
           : category
@@ -310,9 +441,7 @@ export default function DoctorPanel() {
       toast.error("Please enter a diagnosis");
       return;
     }
-
     setSubmittingVisits((prev) => new Set(prev).add(visitId));
-
     const payload = {
       diagnosis,
       prescription: formData.get("prescription"),
@@ -327,22 +456,23 @@ export default function DoctorPanel() {
         .filter((c) => c.tests.length > 0),
       notes: formData.get("notes"),
     };
-
     try {
       const res = await fetch(`/api/clinic/doctor/${visitId}`, {
         method: "POST",
         body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
       });
-
       if (res.ok) {
         toast.success("Diagnosis submitted successfully!");
-        fetchData();
-        setSelectedVisit(null);
+        fetchData(); // Refresh the list view
+        setSelectedVisit(null); // Go back to list or stay on detail? Up to you.
+        setPreviousVisitsForPatient([]); // Clear previous visits state
       } else {
-        toast.error("Failed to submit diagnosis");
+        const errorData = await res.json();
+        toast.error(errorData.error || "Failed to submit diagnosis");
       }
     } catch (error) {
+      console.error("Submit error:", error);
       toast.error("Failed to submit diagnosis");
     } finally {
       setSubmittingVisits((prev) => {
@@ -435,7 +565,8 @@ export default function DoctorPanel() {
                     <Card
                       key={visit.id}
                       className="hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-sky-500 bg-white dark:bg-gray-900"
-                      onClick={() => setSelectedVisit(visit)}
+                      // onClick={() => setSelectedVisit(visit)} // OLD
+                      onClick={() => fetchDetailedVisit(visit.id)} // NEW: Fetch detailed data
                     >
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
@@ -469,11 +600,25 @@ export default function DoctorPanel() {
                           </div>
                           <div className="text-right space-y-2">
                             <div className="flex items-center space-x-2">
+                                     {visit.labResult && (
+                                <div>
+                                  <Badge className="flex items-center gap-1 bg-green-500 text-white dark:bg-green-700 dark:text-green-100">
+                                    <Beaker className="w-3 h-3" />
+                                    <span>Lab Results Available</span>
+                                  </Badge>
+                                </div>
+                              )}
                               <Clock className="w-4 h-4 text-gray-400" />
                               <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {format(new Date(visit.createdAt), "MMM dd, HH:mm")}
+                                {safeFormatDate(
+                                  visit.createdAt,
+                                  "MMM dd, HH:mm"
+                                )}{" "}
+                                {/* Use helper */}
                               </span>
+                       
                             </div>
+
                             {visit.nurseNote && (
                               <Badge variant="secondary" className="text-xs">
                                 Vitals Recorded
@@ -496,9 +641,6 @@ export default function DoctorPanel() {
             </CardContent>
           </Card>
         ) : (
-          /* ----------------------------------------------------------
-             Detailed Visit View
-          -----------------------------------------------------------*/
           <Card className="shadow-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm overflow-hidden">
             <CardHeader className="border-b border-sky-100 dark:border-sky-800">
               <div className="flex items-center justify-between">
@@ -508,7 +650,8 @@ export default function DoctorPanel() {
                     <span>Patient Consultation</span>
                   </CardTitle>
                   <CardDescription>
-                    {selectedVisit.studentInfo?.fullName || selectedVisit.studentId}
+                    {selectedVisit.studentInfo?.fullName ||
+                      selectedVisit.studentId}
                   </CardDescription>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -518,12 +661,19 @@ export default function DoctorPanel() {
                   >
                     <Clock className="w-3 h-3" />
                     <span>
-                      {format(new Date(selectedVisit.createdAt), "MMM dd, hh:mm a")}
+                      {safeFormatDate(
+                        selectedVisit.createdAt,
+                        "MMM dd, hh:mm a"
+                      )}{" "}
+                      {/* Use helper */}
                     </span>
                   </Badge>
                   <Button
                     variant="outline"
-                    onClick={() => setSelectedVisit(null)}
+                    onClick={() => {
+                      setSelectedVisit(null);
+                      setPreviousVisitsForPatient([]); // Clear previous visits when going back
+                    }}
                     className="flex items-center space-x-2 bg-transparent"
                   >
                     <ArrowLeft className="w-4 h-4" />
@@ -532,10 +682,11 @@ export default function DoctorPanel() {
                 </div>
               </div>
             </CardHeader>
-
-            <CardContent className="p-8 space-y-8">
-              {/* Patient Information */}
+            <CardContent className="p-6 space-y-8">
+              {" "}
+              {/* Reduced padding slightly */}
               <div className="flex items-start space-x-6 p-6 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800/50 dark:to-blue-900/20 rounded-xl border border-gray-100 dark:border-gray-700">
+                {/* ... existing patient info JSX, adjust to use selectedVisit.studentInfo ... */}
                 <div className="flex-shrink-0">
                   {selectedVisit.studentInfo?.profileImageUrl ? (
                     <img
@@ -549,7 +700,6 @@ export default function DoctorPanel() {
                     </div>
                   )}
                 </div>
-
                 <div className="flex-1 space-y-4">
                   <div>
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -559,7 +709,7 @@ export default function DoctorPanel() {
                       Student ID: {selectedVisit.studentId}
                     </p>
                   </div>
-
+                  {/* ... rest of patient info fields using selectedVisit.studentInfo ... */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {selectedVisit.studentInfo?.gender && (
                       <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
@@ -586,7 +736,6 @@ export default function DoctorPanel() {
                       </div>
                     )}
                   </div>
-
                   {selectedVisit.studentInfo?.college && (
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
@@ -601,23 +750,31 @@ export default function DoctorPanel() {
                       )}
                     </div>
                   )}
-
                   <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                     <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                       <strong>Chief Complaint:</strong> {selectedVisit.reason}
                     </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Visit Created: {safeFormatDate(selectedVisit.createdAt)}{" "}
+                      {/* Use helper */}
+                    </p>
                   </div>
                 </div>
               </div>
-
-              {/* Vital Signs */}
+              {/* Vital Signs - Use selectedVisit.nurseNote */}
               {selectedVisit.nurseNote && (
                 <div className="p-6 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 rounded-xl border border-sky-100 dark:border-sky-800">
                   <h3 className="flex items-center space-x-2 text-lg font-semibold text-sky-700 dark:text-sky-300 mb-4">
                     <Stethoscope className="w-5 h-5" />
-                    <span>Vital Signs</span>
+                    <span>
+                      Vital Signs (Recorded:{" "}
+                      {safeFormatDate(selectedVisit.nurseNote.createdAt)})
+                    </span>{" "}
+                    {/* Use helper */}
                   </h3>
+                  {/* ... existing vitals grid using selectedVisit.nurseNote ... */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* ... BP, Temp, Pulse, Weight ... */}
                     <div className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 rounded-lg border">
                       <Heart className="w-5 h-5 text-red-500" />
                       <div>
@@ -666,21 +823,25 @@ export default function DoctorPanel() {
                   {selectedVisit.nurseNote.notes && (
                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>Nurse Notes:</strong> {selectedVisit.nurseNote.notes}
+                        <strong>Nurse Notes:</strong>{" "}
+                        {selectedVisit.nurseNote.notes}
                       </p>
                     </div>
                   )}
                 </div>
               )}
-
-              {/* Lab Results */}
+              {/* Lab Results - Use selectedVisit.labResult */}
               {selectedVisit.labResult && (
                 <div className="p-6 bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
                   <h3 className="flex items-center space-x-2 text-lg font-semibold text-blue-700 dark:text-blue-300 mb-4">
                     <TestTube className="w-5 h-5" />
-                    <span>Laboratory Results</span>
+                    <span>
+                      Laboratory Results (Received:{" "}
+                      {safeFormatDate(selectedVisit.labResult.createdAt)})
+                    </span>{" "}
+                    {/* Use helper */}
                   </h3>
-
+                  {/* ... existing lab results display using selectedVisit.labResult ... */}
                   {parsedLabResults?.length ? (
                     <div className="space-y-6">
                       {parsedLabResults.map((category, index) => (
@@ -688,62 +849,264 @@ export default function DoctorPanel() {
                           <h4 className="font-bold mb-3 text-blue-800 dark:text-blue-200">
                             {category.category}
                           </h4>
-
-                          {Array.isArray(category.tests) && category.tests.length ? (
-                            <table className="w-full">
-                              <thead>
-                                <tr className="border-b">
-                                  <th className="text-left pb-2 text-sm font-medium">Test</th>
-                                  <th className="text-left pb-2 text-sm font-medium">Result</th>
-                                  <th className="text-left pb-2 text-sm font-medium">Normal Range</th>
+                          {/* ... table content ... */}
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left pb-2 text-sm font-medium">
+                                  Test
+                                </th>
+                                <th className="text-left pb-2 text-sm font-medium">
+                                  Result
+                                </th>
+                                <th className="text-left pb-2 text-sm font-medium">
+                                  Normal Range
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {category.tests.map((test, testIndex) => (
+                                <tr key={testIndex} className="border-b">
+                                  <td className="py-3 text-sm">
+                                    {test.testName}
+                                  </td>
+                                  <td className="py-3 text-sm font-medium">
+                                    {test.result}
+                                  </td>
+                                  <td className="py-3 text-sm text-gray-500 dark:text-gray-400">
+                                    {test.normalRange}
+                                  </td>
                                 </tr>
-                              </thead>
-                              <tbody>
-                                {category.tests.map((test, testIndex) => (
-                                  <tr key={testIndex} className="border-b">
-                                    <td className="py-3 text-sm">{test.testName}</td>
-                                    <td className="py-3 text-sm font-medium">{test.result}</td>
-                                    <td className="py-3 text-sm text-gray-500 dark:text-gray-400">
-                                      {test.normalRange}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          ) : (
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              No tests in this category.
-                            </p>
-                          )}
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        {selectedVisit.labResult.results}
+                        {/* Handle case where results aren't parsed or are a simple string */}
+                        {selectedVisit.labResult.results ||
+                          "Results available but format unknown."}
                       </p>
                     </div>
                   )}
-
                   {selectedVisit.labResult.notes && (
                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>Lab Notes:</strong> {selectedVisit.labResult.notes}
+                        <strong>Lab Notes:</strong>{" "}
+                        {selectedVisit.labResult.notes}
                       </p>
                     </div>
                   )}
                 </div>
               )}
+              {/* Pharmacy Notes (if any) */}
+              {selectedVisit.pharmacyNote && (
+                <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-800">
+                  <h3 className="flex items-center space-x-2 text-lg font-semibold text-green-700 dark:text-green-300 mb-4">
+                    <Pill className="w-5 h-5" />
+                    <span>
+                      Pharmacy Dispensed (On:{" "}
+                      {safeFormatDate(selectedVisit.pharmacyNote.createdAt)})
+                    </span>{" "}
+                    {/* Use helper */}
+                  </h3>
+                  <div className="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border">
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {selectedVisit.pharmacyNote.stock?.medicineName ||
+                          "Medication"}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Quantity: {selectedVisit.pharmacyNote.quantity}{" "}
+                        {selectedVisit.pharmacyNote.stock?.unit || "unit(s)"}
+                      </p>
+                      {selectedVisit.pharmacyNote.stock?.description && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {selectedVisit.pharmacyNote.stock.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {selectedVisit.pharmacyNote.notes && (
+                    <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <p className="text-sm text-green-800 dark:text-green-200">
+                        <strong>Pharmacist Notes:</strong>{" "}
+                        {selectedVisit.pharmacyNote.notes}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Previous Visits Summary Card */}
+              {previousVisitsForPatient.length > 0 && (
+                <div className="p-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
+                  <h3 className="flex items-center space-x-2 text-lg font-semibold text-purple-700 dark:text-purple-300 mb-4">
+                    <ClipboardList className="w-5 h-5" />
+                    <span>
+                      Recent Visit History (Last{" "}
+                      {previousVisitsForPatient.length})
+                    </span>
+                  </h3>
+                  <div className="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                    {" "}
+                    {/* Scrolling container */}
+                    {previousVisitsForPatient.map((prevVisit) => (
+                      <div
+                        key={prevVisit.id}
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {prevVisit.doctorNote?.diagnosis}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {safeFormatDate(prevVisit.createdAt)}{" "}
+                              {/* Use helper */}
+                            </p>
+                          </div>
+                        </div>
 
+                        {/* Summary of previous visit details */}
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50 flex flex-wrap gap-2 text-xs">
+                          {prevVisit.doctorNote && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    variant="outline"
+                                    className="flex items-center cursor-help"
+                                  >
+                                    <Stethoscope className="w-3 h-3 mr-1" />
+                                    <span>Diagnosis</span>
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="bottom"
+                                  className="max-w-xs p-3 bg-gray-800 text-white text-xs rounded-md"
+                                >
+                                  <p>
+                                    <span className="font-medium">
+                                      Diagnosis:
+                                    </span>
+                                  </p>
+                                  <p className="mt-1">
+                                    {prevVisit.doctorNote.diagnosis ||
+                                      "Diagnosis recorded but empty."}
+                                  </p>
+                                  {prevVisit.doctorNote.prescription && (
+                                    <>
+                                      <p className="mt-2 font-medium">
+                                        Prescription:
+                                      </p>
+                                      <p className="mt-1 whitespace-pre-wrap">
+                                        {prevVisit.doctorNote.prescription}
+                                      </p>
+                                    </>
+                                  )}
+                                  <p className="mt-2 text-gray-400 text-xs">
+                                    Recorded:{" "}
+                                    {safeFormatDate(
+                                      prevVisit.doctorNote.createdAt
+                                    )}{" "}
+                                    {/* Use helper */}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {prevVisit.nurseNote && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    variant="outline"
+                                    className="flex items-center cursor-help"
+                                  >
+                                    <Heart className="w-3 h-3 mr-1" />
+                                    <span>Vitals</span>
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="bottom"
+                                  className=" p-3 bg-gray-800 text-white text-xs rounded-md"
+                                >
+                                  <p className="font-medium">Vital Signs:</p>
+                                  <ul className="mt-1 space-y-1">
+                                    <li>
+                                      BP: {prevVisit.nurseNote.bloodPressure}
+                                    </li>
+                                    <li>
+                                      Temp: {prevVisit.nurseNote.temperature}
+                                    </li>
+                                    <li>Pulse: {prevVisit.nurseNote.pulse}</li>
+                                    <li>
+                                      Weight: {prevVisit.nurseNote.weight}
+                                    </li>
+                                  </ul>
+                                  <p className="mt-2 text-gray-400 text-xs">
+                                    Recorded:{" "}
+                                    {safeFormatDate(
+                                      prevVisit.nurseNote.createdAt
+                                    )}{" "}
+                                    {/* Use helper */}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {prevVisit.labResult && (
+                            <Badge
+                              variant="outline"
+                              className="flex items-center"
+                            >
+                              <TestTube className="w-3 h-3 mr-1" />
+                              <span>Lab Done</span>
+                              <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">
+                                ({safeFormatDate(prevVisit.labResult.createdAt)}
+                                ) {/* Use helper */}
+                              </span>
+                            </Badge>
+                          )}
+                          {prevVisit.pharmacyNote && (
+                            <Badge
+                              variant="outline"
+                              className="flex items-center"
+                            >
+                              <Pill className="w-3 h-3 mr-1" />
+                              <span>Dispensed</span>
+                              {prevVisit.pharmacyNote.stock && (
+                                <span className="ml-1">
+                                  ({prevVisit.pharmacyNote.stock.medicineName})
+                                </span>
+                              )}
+                              <span className="ml-1 text-gray-500 dark:text-gray-400 text-xs">
+                                (
+                                {safeFormatDate(
+                                  prevVisit.pharmacyNote.createdAt
+                                )}
+                                ) {/* Use helper */}
+                              </span>
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <Separator />
-
-              {/* Diagnosis Form */}
+              {/* Diagnosis Form - Keep mostly as is, adjust if needed */}
               <form
                 onSubmit={(e) => handleSubmit(e, selectedVisit.id)}
                 className="space-y-6"
               >
+                {/* ... existing form fields ... */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Diagnosis Input */}
                   <div className="space-y-2">
                     <Label
                       htmlFor={`diagnosis-${selectedVisit.id}`}
@@ -758,9 +1121,11 @@ export default function DoctorPanel() {
                       placeholder="Enter primary diagnosis..."
                       required
                       className="h-12"
+                      // Pre-fill if editing? Usually not for new diagnosis
+                      // defaultValue={selectedVisit.doctorNote?.diagnosis || ""}
                     />
                   </div>
-
+                  {/* Prescription Input */}
                   <div className="space-y-2">
                     <Label
                       htmlFor={`prescription-${selectedVisit.id}`}
@@ -774,10 +1139,12 @@ export default function DoctorPanel() {
                       name="prescription"
                       placeholder="Medications and dosage..."
                       className="h-12"
+                      // Pre-fill if editing?
+                      // defaultValue={selectedVisit.doctorNote?.prescription || ""}
                     />
                   </div>
                 </div>
-
+                {/* Clinical Notes */}
                 <div className="space-y-2">
                   <Label
                     htmlFor={`notes-${selectedVisit.id}`}
@@ -791,17 +1158,29 @@ export default function DoctorPanel() {
                     name="notes"
                     placeholder="Additional clinical observations, treatment plan, follow-up instructions..."
                     className="min-h-[100px] resize-none"
+                    // Pre-fill if editing?
+                    // defaultValue={selectedVisit.doctorNote?.notes || ""}
                   />
                 </div>
-
-                {selectedVisit.labResult ? null : (
+                {/* Request Lab Test Checkbox - Logic stays similar, but check if lab already done */}
+                {selectedVisit.labResult ? ( // If result already exists, don't show request checkbox
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-sm text-green-700 dark:text-green-300 flex items-center">
+                      <ClipboardCheck className="w-4 h-4 mr-2" />
+                      Laboratory tests have already been completed for this
+                      visit. See results above.
+                    </p>
+                  </div>
+                ) : (
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
                       <Checkbox
                         id={`lab-${selectedVisit.id}`}
                         name="requestLabTest"
                         checked={requestLabTestChecked}
-                        onCheckedChange={(checked) => setRequestLabTestChecked(!!checked)}
+                        onCheckedChange={(checked) =>
+                          setRequestLabTestChecked(!!checked)
+                        }
                       />
                       <Label
                         htmlFor={`lab-${selectedVisit.id}`}
@@ -811,13 +1190,12 @@ export default function DoctorPanel() {
                         <span>Request Laboratory Test</span>
                       </Label>
                     </div>
-
                     {requestLabTestChecked && (
                       <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                        {/* ... existing lab test selection UI ... */}
                         <h4 className="font-medium mb-4 text-gray-900 dark:text-white">
                           Select Tests to Request
                         </h4>
-
                         <div className="space-y-6">
                           {labTests.map((category) => (
                             <div key={category.id} className="space-y-3">
@@ -826,7 +1204,10 @@ export default function DoctorPanel() {
                               </h5>
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 {category.tests.map((test) => (
-                                  <div key={test.id} className="flex items-center space-x-2">
+                                  <div
+                                    key={test.id}
+                                    className="flex items-center space-x-2"
+                                  >
                                     <Checkbox
                                       id={`test-${test.id}`}
                                       checked={test.selected}
@@ -834,7 +1215,10 @@ export default function DoctorPanel() {
                                         handleTestChange(category.id, test.id)
                                       }
                                     />
-                                    <Label htmlFor={`test-${test.id}`} className="text-sm">
+                                    <Label
+                                      htmlFor={`test-${test.id}`}
+                                      className="text-sm"
+                                    >
                                       {test.name}
                                     </Label>
                                   </div>
@@ -847,20 +1231,13 @@ export default function DoctorPanel() {
                     )}
                   </div>
                 )}
-
-                <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-blue-500" />
-                  <p className="text-sm text-blue-600 dark:text-blue-400">
-                    Please ensure all required fields are completed before
-                    submitting the diagnosis.
-                  </p>
-                </div>
-
+                {/* Submit Button - Keep as is */}
                 <Button
                   type="submit"
                   disabled={submittingVisits.has(selectedVisit.id)}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white h-12 text-lg font-medium"
                 >
+                  {/* ... existing button content ... */}
                   {submittingVisits.has(selectedVisit.id) ? (
                     <div className="flex items-center space-x-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
