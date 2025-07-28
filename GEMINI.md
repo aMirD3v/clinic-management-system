@@ -35,3 +35,6 @@ This is a full-stack web application for managing a university clinic. It provid
     ```
 
 The application should now be running at [http://localhost:3000](http://localhost:3000).
+
+
+components you should use shadcn ui latest version like [https://v0.dev/](https://v0.dev/)

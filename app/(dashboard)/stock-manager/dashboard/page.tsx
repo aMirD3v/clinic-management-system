@@ -16,7 +16,7 @@ export default function StockManagerDashboardPage() {
   const { data: dashboardData, error, mutate } = useSWR("/api/stock/dashboard", fetcher);
 
   const handleCheckExpiry = async () => {
-    toast.loading("Checking for expiring stock...");
+    // toast.loading("Checking for expiring stock...");
     const res = await fetch("/api/notifications/check-expiry");
     if (res.ok) {
       toast.success("Expiry check complete!");

@@ -11,7 +11,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export function NotificationToast() {
   const { data: session } = useSession();
-  const { data: notifications } = useSWR(session?.user?.role === "STOCK_MANAGER" ? "/api/notifications" : null, fetcher);
+  const { data: notifications } = useSWR(session?.user?.role === "STOCK_MANAGER"  ? "/api/notifications" : null, fetcher);
 
   useEffect(() => {
     if (session?.user?.role === "STOCK_MANAGER" && notifications) {

@@ -7,7 +7,8 @@ import { getServerSession } from "next-auth";
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  if (session?.user?.role !== "STOCK_MANAGER") {
+  const allowedRoles = ["STOCK_MANAGER", "ADMIN"];
+  if (!session?.user?.role || !allowedRoles.includes(session.user.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
@@ -20,7 +21,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  if (session?.user?.role !== "STOCK_MANAGER") {
+  const allowedRoles = ["STOCK_MANAGER", "ADMIN"];
+  if (!session?.user?.role || !allowedRoles.includes(session.user.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 

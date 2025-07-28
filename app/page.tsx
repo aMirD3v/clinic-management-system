@@ -8,7 +8,10 @@ export default async function Home() {
 
   if (session?.user?.role) {
     switch (session.user.role) {
-      case "RECEPTION":
+      case "ADMIN":
+        redirect("/admin");
+        break;
+        case "RECEPTION":
         redirect("/clinic/reception");
         break;
       case "NURSE":

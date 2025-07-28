@@ -74,6 +74,16 @@ export function NotificationsTable() {
                     </Button>
                   )}
                 </TableCell>
+                <TableCell>
+                  <Button variant="destructive" size="sm" onClick={async () => {
+                    await fetch(`/api/notifications/${notification.id}`, {
+                      method: "DELETE",
+                    });
+                    mutate();
+                  }}>
+                    Delete
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

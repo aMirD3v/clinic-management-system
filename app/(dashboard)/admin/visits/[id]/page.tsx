@@ -22,8 +22,8 @@ type FullVisit = Visit & {
   pharmacyNote: (PharmacyNote & { stock: Stock | null }) | null; // Include Stock info
 };
 
-export default async function VisitDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function VisitDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
   try {
     // --- Fetch the visit with ALL related data ---

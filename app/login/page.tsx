@@ -55,7 +55,10 @@ const onSubmit = async (data: FormData) => {
     const role = session?.user?.role;
 
     switch (role) {
-      case "STOCK_MANAGER":
+      case "ADMIN":
+        router.push("/admin");
+        break;
+        case "STOCK_MANAGER":
         router.push("/stock-manager");
         break;
         case "RECEPTION":

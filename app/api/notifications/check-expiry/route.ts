@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -15,7 +14,9 @@ export async function GET(req: NextRequest) {
   });
 
   for (const item of expiringStock) {
-    const message = `${item.medicineName} is expiring on ${item.expiryDate.toLocaleDateString()}`;
+    const message = `${
+      item.medicineName
+    } is expiring on ${item.expiryDate.toLocaleDateString()}`;
     await prisma.notification.create({
       data: {
         message,
@@ -24,16 +25,17 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const lowStockItems = await prisma.stock.findMany({
+  const stockItems = await prisma.stock.findMany({
     where: {
       reorderLevel: {
         not: null,
       },
-      quantity: {
-        lte: prisma.stock.fields.reorderLevel,
-      },
     },
   });
+
+  const lowStockItems = stockItems.filter(
+    (item) => item.quantity <= item.reorderLevel! * 0.25
+  );
 
   for (const item of lowStockItems) {
     const message = `${item.medicineName} is low in stock. Current quantity: ${item.quantity}, Reorder level: ${item.reorderLevel}`;

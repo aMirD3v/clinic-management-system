@@ -20,7 +20,9 @@ export default function DashboardLayout({
   const { data: session, status } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({
-    socs: pathname.includes("/socs"),
+    clinic_reports: pathname.includes("/clinic_reports"),
+    stock_reports: pathname.includes("/stock_reports"),
+
   });
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -99,7 +101,7 @@ export default function DashboardLayout({
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {role === "RECEPTION" && (
+          {role === "ADMIN" && (
             <>
               <Link
                 href="/admin"
@@ -131,7 +133,7 @@ export default function DashboardLayout({
               {/* Student One Card System Dropdown */}
               <div className="space-y-1">
                 <button
-                  onClick={() => toggleMenu("socs")}
+                  onClick={() => toggleMenu("clinic_reports")}
                   className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
                 >
                   <div className="flex items-center">
@@ -152,7 +154,7 @@ export default function DashboardLayout({
                   </div>
                   <div
                     className={`transition-transform duration-200 ${
-                      openMenus.socs ? "rotate-90" : ""
+                      openMenus.clinic_reports ? "rotate-90" : ""
                     }`}
                   >
                     <FaChevronRight className="w-3 h-3" />
@@ -161,27 +163,27 @@ export default function DashboardLayout({
 
                 <div
                   className={`ml-8 space-y-1 overflow-hidden transition-all duration-300 ${
-                    openMenus.socs
+                    openMenus.clinic_reports
                       ? "max-h-96 opacity-100"
                       : "max-h-0 opacity-0"
                   }`}
                 >
                   <Link
-                    href="/dashboard/socs/reports/gate"
+                    href="/reports/patient"
                     onClick={() => setSidebarOpen(false)}
                     className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
                     Patient List
                   </Link>
                   <Link
-                    href="/dashboard/socs/reports/cafeteria"
+                    href="/admin/reports/laboratory"
                     onClick={() => setSidebarOpen(false)}
                     className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
                     Laboratoy Report
                   </Link>
                   <Link
-                    href="/dashboard/socs/students"
+                    href="/admin/reports/students"
                     onClick={() => setSidebarOpen(false)}
                     className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
@@ -192,7 +194,7 @@ export default function DashboardLayout({
 
               <div className="space-y-1">
                 <button
-                  onClick={() => toggleMenu("socs")}
+                  onClick={() => toggleMenu("stock_reports")}
                   className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
                 >
                   <div className="flex items-center">
@@ -213,7 +215,7 @@ export default function DashboardLayout({
                   </div>
                   <div
                     className={`transition-transform duration-200 ${
-                      openMenus.socs ? "rotate-90" : ""
+                      openMenus.stock_reports ? "rotate-90" : ""
                     }`}
                   >
                     <FaChevronRight className="w-3 h-3" />
@@ -222,27 +224,27 @@ export default function DashboardLayout({
 
                 <div
                   className={`ml-8 space-y-1 overflow-hidden transition-all duration-300 ${
-                    openMenus.socs
+                    openMenus.stock_reports
                       ? "max-h-96 opacity-100"
                       : "max-h-0 opacity-0"
                   }`}
                 >
                   <Link
-                    href="/dashboard/socs/reports/gate"
+                    href="/admin/reports/stock"
                     onClick={() => setSidebarOpen(false)}
                     className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
                     List Stocks
                   </Link>
                   <Link
-                    href="/dashboard/socs/reports/cafeteria"
+                    href="/admin/reports/pharmacy"
                     onClick={() => setSidebarOpen(false)}
                     className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
                     Pharmacy Report
                   </Link>
                   <Link
-                    href="/dashboard/socs/students"
+                    href="/admin/reports/pharmacy"
                     onClick={() => setSidebarOpen(false)}
                     className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
@@ -252,7 +254,7 @@ export default function DashboardLayout({
               </div>
 
               <Link
-                href="/dashboard/admin/users"
+                href="/admin/users"
                 onClick={() => setSidebarOpen(false)}
                 className={linkClass("/dashboard/admin/users")}
               >
