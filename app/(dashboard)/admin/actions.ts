@@ -16,11 +16,9 @@ export async function getDashboardStats() {
     noStore();
 
     try {
-        console.log("Fetching dashboard stats..."); // Debug log
 
         // --- 1. Total Students ---
         const totalStudents = await prisma.studentInfo.count();
-        console.log(`Total Students: ${totalStudents}`); // Debug log
 
         // --- 2. Active Visits (Not Completed) ---
         const activeVisitsCount = await prisma.visit.count({
@@ -31,7 +29,6 @@ export async function getDashboardStats() {
                 }
             }
         });
-        console.log(`Active Visits: ${activeVisitsCount}`); // Debug log
 
         // --- 3. Low Stock Medicines ---
         // --- Simplified Approach ---
@@ -82,9 +79,6 @@ export async function getDashboardStats() {
 
         // Total low stock is the sum of both conditions
         const lowStockMedicinesCount = lowStockNullReorderCount + lowStockWithReorderCount;
-        console.log(`Low Stock Medicines (Null Reorder): ${lowStockNullReorderCount}`); // Debug log
-        console.log(`Low Stock Medicines (With Reorder): ${lowStockWithReorderCount}`); // Debug log
-        console.log(`Total Low Stock Medicines: ${lowStockMedicinesCount}`); // Debug log
 
         // --- 4. Today's Visits ---
         const today = new Date();
@@ -101,10 +95,6 @@ export async function getDashboardStats() {
                 }
             }
         });
-        console.log(`Today's Visits: ${todaysVisitsCount}`); // Debug log
-
-        // --- Return Results ---
-        console.log("Dashboard stats fetched successfully."); // Debug log
         return {
             totalStudents,
             activeVisits: activeVisitsCount,
@@ -143,7 +133,6 @@ export async function getRecentVisits(limit: number = 10) {
     noStore();
 
     try {
-        console.log(`Fetching ${limit} recent visits...`); // Debug log
         const recentVisits = await prisma.visit.findMany({
             take: limit,
             orderBy: {
@@ -164,7 +153,6 @@ export async function getRecentVisits(limit: number = 10) {
                 }
             }
         });
-        console.log(`Fetched ${recentVisits.length} recent visits.`); // Debug log
         return recentVisits;
     } catch (error: any) {
         // Improved error logging

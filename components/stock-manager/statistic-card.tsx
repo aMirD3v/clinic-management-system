@@ -1,9 +1,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function StatisticCard({ title, value, icon }) {
+interface StatisticCardProps {
+  title: string;
+  value: string | number;
+  icon?: React.ReactNode;
+}
+
+export function StatisticCard({ title, value, icon }: StatisticCardProps) {
   return (
-    <Card>
+    <Card className="bg-white dark:bg-slate-900">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {icon}

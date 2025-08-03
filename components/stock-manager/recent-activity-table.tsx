@@ -1,7 +1,6 @@
 
 "use client";
 
-import useSWR from "swr";
 import { 
   Table, 
   TableBody, 
@@ -12,16 +11,22 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+interface RecentActivity {
+  id: string;
+  activity: string;
+  createdAt: string;
+  stock: {
+    medicineName: string;
+  };
+}
 
-export function RecentActivityTable() {
-  const { data: dashboardData, error } = useSWR("/api/stock/dashboard", fetcher);
+interface RecentActivityTableProps {
+  recentActivities: RecentActivity[];
+}
 
-  if (error) return <div>Failed to load recent activities</div>;
-  if (!dashboardData) return <div>Loading...</div>;
-
+export function RecentActivityTable({ recentActivities }: RecentActivityTableProps) {
   return (
-    <Card>
+    <Card className="bg-white dark:bg-slate-900">
       <CardHeader>
         <CardTitle>Recent Activities</CardTitle>
       </CardHeader>
@@ -35,7 +40,7 @@ export function RecentActivityTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {dashboardData.recentActivities.map((activity: any) => (
+            {recentActivities.map((activity) => (
               <TableRow key={activity.id}>
                 <TableCell>{activity.activity}</TableCell>
                 <TableCell>{activity.stock.medicineName}</TableCell>

@@ -9,10 +9,14 @@ export async function GET(
   const encodedId = encodeURIComponent(id);
 
   // First, perform the fetch and get the Response object
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/students/${encodedId}`
-  );
-
+const res = await fetch(
+  `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/students/${encodedId}`,
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.CLINIC_TO_PORTAL_API_KEY}`,
+    },
+  }
+);
   // If the API gave us a 404, bail out here
   if (res.status === 404) {
     return NextResponse.json(

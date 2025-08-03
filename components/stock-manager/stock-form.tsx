@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Stock } from "@prisma/client";
 
-export function StockForm({ defaultValues, onSubmit, isSubmitting }) {
+interface StockFormProps {
+  defaultValues: Partial<Stock>;
+  onSubmit: (data: any) => void;
+  isSubmitting: boolean;
+}
+export function StockForm({ defaultValues, onSubmit, isSubmitting }: StockFormProps) {
   const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues });
 
   return (

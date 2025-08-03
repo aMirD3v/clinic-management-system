@@ -17,26 +17,26 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function ExpiringSoonList() {
   const { data: stock, error } = useSWR("/api/stock", fetcher);
 
-  if (error) return <div>Failed to load expiring stock</div>;
-  if (!stock) return <div>Loading...</div>;
-
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-  const expiringSoon = stock.filter((item: any) => {
+  const expiringSoon = stock?.filter((item: any) => {
     const expiryDate = new Date(item.expiryDate);
     return expiryDate > new Date() && expiryDate <= thirtyDaysFromNow;
   });
 
   return (
-    <Card>
+    <Card className="bg-white dark:bg-slate-900">
       <CardHeader>
         <CardTitle>Expiring Soon</CardTitle>
       </CardHeader>
       <CardContent>
-        {expiringSoon.length === 0 ? (
+        {error && <div>Failed to load expiring stock</div>}
+        {!stock && <div>Loading...</div>}
+        {stock && expiringSoon.length === 0 && (
           <p>No items expiring soon.</p>
-        ) : (
+        )}
+        {stock && expiringSoon.length > 0 && (
           <Table>
             <TableHeader>
               <TableRow>

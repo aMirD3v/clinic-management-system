@@ -130,10 +130,56 @@ export default function DashboardLayout({
                 Dashboard
               </Link>
 
-              {/* Student One Card System Dropdown */}
+            
+
+              {/* Patient Visits Link */}
+              <Link
+                href="/admin/visits"
+                onClick={() => setSidebarOpen(false)}
+                className={linkClass("/dashboard/admin/visits")}
+              >
+                <svg
+                  className="w-5 h-5 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2z"
+                  />
+                </svg>
+                Patient Visits
+              </Link>
+
+              {/* Inventory/Stock Link */}
+              <Link
+                href="/admin/stock"
+                onClick={() => setSidebarOpen(false)}
+                className={linkClass("/dashboard/admin/stock")}
+              >
+                <svg
+                  className="w-5 h-5 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H7a2 2 0 00-2 2v2m7-7h.01"
+                  />
+                </svg>
+                Inventory/Stock
+              </Link>
+
+              {/* Reports Dropdown */}
               <div className="space-y-1">
                 <button
-                  onClick={() => toggleMenu("clinic_reports")}
+                  onClick={() => toggleMenu("reports")}
                   className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
                 >
                   <div className="flex items-center">
@@ -150,11 +196,11 @@ export default function DashboardLayout({
                         d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2z"
                       />
                     </svg>
-                    Clinic Report
+                    Clinic Reports
                   </div>
                   <div
                     className={`transition-transform duration-200 ${
-                      openMenus.clinic_reports ? "rotate-90" : ""
+                      openMenus.reports ? "rotate-90" : ""
                     }`}
                   >
                     <FaChevronRight className="w-3 h-3" />
@@ -163,96 +209,29 @@ export default function DashboardLayout({
 
                 <div
                   className={`ml-8 space-y-1 overflow-hidden transition-all duration-300 ${
-                    openMenus.clinic_reports
+                    openMenus.reports
                       ? "max-h-96 opacity-100"
                       : "max-h-0 opacity-0"
                   }`}
                 >
                   <Link
-                    href="/reports/patient"
+                    href="/admin/reports/visitors"
                     onClick={() => setSidebarOpen(false)}
                     className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
-                    Patient List
+                    Visitor Report
                   </Link>
-                  <Link
-                    href="/admin/reports/laboratory"
-                    onClick={() => setSidebarOpen(false)}
-                    className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    Laboratoy Report
-                  </Link>
-                  <Link
-                    href="/admin/reports/students"
-                    onClick={() => setSidebarOpen(false)}
-                    className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    Recent Visits
-                  </Link>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <button
-                  onClick={() => toggleMenu("stock_reports")}
-                  className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
-                >
-                  <div className="flex items-center">
-                    <svg
-                      className="w-5 h-5 mr-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Stock Report
-                  </div>
-                  <div
-                    className={`transition-transform duration-200 ${
-                      openMenus.stock_reports ? "rotate-90" : ""
-                    }`}
-                  >
-                    <FaChevronRight className="w-3 h-3" />
-                  </div>
-                </button>
-
-                <div
-                  className={`ml-8 space-y-1 overflow-hidden transition-all duration-300 ${
-                    openMenus.stock_reports
-                      ? "max-h-96 opacity-100"
-                      : "max-h-0 opacity-0"
-                  }`}
-                >
                   <Link
                     href="/admin/reports/stock"
                     onClick={() => setSidebarOpen(false)}
                     className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
-                    List Stocks
-                  </Link>
-                  <Link
-                    href="/admin/reports/pharmacy"
-                    onClick={() => setSidebarOpen(false)}
-                    className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    Pharmacy Report
-                  </Link>
-                  <Link
-                    href="/admin/reports/pharmacy"
-                    onClick={() => setSidebarOpen(false)}
-                    className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    List Pharamacies
+                    Stock Report
                   </Link>
                 </div>
               </div>
 
+                {/* User Management Link */}
               <Link
                 href="/admin/users"
                 onClick={() => setSidebarOpen(false)}
@@ -271,7 +250,7 @@ export default function DashboardLayout({
                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
                   />
                 </svg>
-                Manage Users
+                User Management
               </Link>
             </>
           )}

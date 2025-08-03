@@ -15,7 +15,25 @@ export default async function PharmacyPage() {
     prisma.stock.findMany(),
   ]);
 
+ const visitsWithStringDates = visits.map((visit) => ({
+  ...visit,
+  createdAt: visit.createdAt.toISOString(),
+  studentInfo: visit.studentInfo
+    ? {
+        ...visit.studentInfo,
+        profileImageUrl: visit.studentInfo.profileImageUrl ?? undefined,
+        gender: visit.studentInfo.gender ?? undefined,
+        age: visit.studentInfo.age ?? undefined,
+        phone: visit.studentInfo.phone ?? undefined,
+        email: visit.studentInfo.email ?? undefined,
+        college: visit.studentInfo.college ?? undefined,
+        department: visit.studentInfo.department ?? undefined,
+      }
+    : null,
+}));
+
+
   return (
-   <PharmacyDashboard visits={visits} stocks={stocks} />
+   <PharmacyDashboard visits={visitsWithStringDates} stocks={stocks} />
   );
 }

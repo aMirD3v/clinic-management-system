@@ -30,7 +30,7 @@ export function StockTable() {
   const { data: stock, error, mutate } = useSWR("/api/stock", fetcher);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedStock, setSelectedStock] = useState(null);
+  const [selectedStock, setSelectedStock] = useState<any>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   if (error) return <div>Failed to load stock</div>;
@@ -54,7 +54,7 @@ export function StockTable() {
 
   const handleEditSubmit = async (data: any) => {
     setIsSubmitting(true);
-    await fetch(`/api/stock/${selectedStock.id}`, {
+    await fetch(`/api/stock/${selectedStock?.id}`, {
       method: "PUT",
       body: JSON.stringify(data),
       headers: { "Content-Type": "application/json" },
@@ -72,7 +72,7 @@ export function StockTable() {
   };
 
   return (
-    <Card>
+    <Card className="bg-white dark:bg-slate-900">
       <CardHeader>
         <CardTitle>Stock List</CardTitle>
       </CardHeader>

@@ -17,7 +17,7 @@ export function StockList({ stocks }: StockListProps) {
             <span>
               Quantity: {stock.quantity} unit {stock.unit}
             </span>
-            <span>Price: ${stock.price.toFixed(2)}</span>
+            <span>Price: ${stock.price?.toFixed(2)}</span>
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Expires: {new Date(stock.expiryDate).toLocaleDateString()}

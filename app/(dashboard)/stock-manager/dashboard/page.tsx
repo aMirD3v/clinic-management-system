@@ -26,46 +26,50 @@ export default function StockManagerDashboardPage() {
     }
   };
 
-  if (error) return <div>Failed to load dashboard data</div>;
-  if (!dashboardData) return <div>Loading dashboard...</div>;
-
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Stock Management Dashboard</h1>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        <StatisticCard
-          title="Total Stock"
-          value={dashboardData.totalStock}
-          icon={<Package className="h-4 w-4 text-muted-foreground" />}
-        />
-        <StatisticCard
-          title="Low Stock Items"
-          value={dashboardData.lowStock}
-          icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
-        />
-        <StatisticCard
-          title="Expired Items"
-          value={dashboardData.expiredStock}
-          icon={<CalendarOff className="h-4 w-4 text-muted-foreground" />}
-        />
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Stock Management Dashboard</h1>
+        <Button className="bg-blue-600 text-white" onClick={handleCheckExpiry}>
+          Manually Check Expiry
+        </Button>
       </div>
 
-      <div className="flex justify-end mb-4">
-        <Button onClick={handleCheckExpiry}>Manually Check Expiry</Button>
-      </div>
+      {error && <div>Failed to load dashboard data</div>}
+      {!dashboardData && <div>Loading dashboard...</div>}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-        
-        <div>
-          <h2 className="text-xl font-bold mb-4">Recent Activities</h2>
-          <RecentActivityTable />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold mb-4">Expiring Soon</h2>
-          <ExpiringSoonList />
-        </div>
-      </div>
+      {dashboardData && (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
+            <StatisticCard
+              title="Total Stock"
+              value={dashboardData.totalStock}
+              icon={<Package className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatisticCard
+              title="Low Stock Items"
+              value={dashboardData.lowStock}
+              icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatisticCard
+              title="Expired Items"
+              value={dashboardData.expiredStock}
+              icon={<CalendarOff className="h-4 w-4 text-muted-foreground" />}
+            />
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2">
+            <div>
+              <h2 className="text-xl font-bold mb-4">Recent Activities</h2>
+              <RecentActivityTable recentActivities={dashboardData.recentActivities} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-4">Expiring Soon</h2>
+              <ExpiringSoonList />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

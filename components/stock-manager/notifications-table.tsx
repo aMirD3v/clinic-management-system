@@ -31,7 +31,7 @@ export function NotificationsTable() {
   };
 
   return (
-    <Card>
+    <Card className="bg-white dark:bg-slate-900">
       <CardHeader>
         <CardTitle>Notifications</CardTitle>
       </CardHeader>
