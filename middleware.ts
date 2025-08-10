@@ -2,12 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const protectedRoutes = [
-  "/admin",
-  "/clinic",
-  "/stock-manager",
-  "/dashboard",
-];
+const protectedRoutes = ["/admin", "/clinic", "/stock-manager", "/dashboard"];
 
 const rolePermissions = {
   ADMIN: [
@@ -17,42 +12,21 @@ const rolePermissions = {
     "/api/stock",
     "/api/notifications",
     "/api/clinic",
-  ],
-  RECEPTION: [
-    "/clinic/reception",
-    "/api/clinic/reception",
     "/api/students",
+    "/stock-manager/notifications",
   ],
-  NURSE: [
-    "/clinic/nurse",
-    "/api/clinic/nurse",
-    "/api/students",
-  ],
-  DOCTOR: [
-    "/clinic/doctor",
-    "/api/clinic/doctor",
-    "/api/students",
-  ],
-  LABORATORY: [
-    "/clinic/laboratory",
-    "/api/clinic/laboratory",
-    "/api/students",
-  ],
+  RECEPTION: ["/clinic/reception", "/api/clinic/reception", "/api/students"],
+  NURSE: ["/clinic/nurse", "/api/clinic/nurse", "/api/students"],
+  DOCTOR: ["/clinic/doctor", "/api/clinic/doctor", "/api/students"],
+  LABORATORY: ["/clinic/laboratory", "/api/clinic/laboratory", "/api/students"],
   PHARMACY: [
     "/clinic/pharmacy",
     "/api/clinic/pharmacy",
     "/api/students",
     "/api/stock",
   ],
-  STOCK_MANAGER: [
-    "/stock-manager",
-    "/api/stock",
-    "/api/notifications",
-  ],
-  GENERAL_STAFF: [
-    "/dashboard",
-    "/api/students",
-  ],
+  STOCK_MANAGER: ["/stock-manager", "/api/stock", "/api/notifications"],
+  GENERAL_STAFF: ["/dashboard", "/api/students"],
 };
 
 export async function middleware(request: NextRequest) {
@@ -76,7 +50,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check if route is protected
-  const isProtectedRoute = protectedRoutes.some(route => 
+  const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
@@ -92,7 +66,7 @@ export async function middleware(request: NextRequest) {
   const userRole = token.role as keyof typeof rolePermissions;
 
   // Check if user has permission for the route
-  const hasPermission = rolePermissions[userRole]?.some(allowedPath => 
+  const hasPermission = rolePermissions[userRole]?.some((allowedPath) =>
     pathname.startsWith(allowedPath)
   );
 
@@ -105,7 +79,7 @@ export async function middleware(request: NextRequest) {
       DOCTOR: "/clinic/doctor",
       LABORATORY: "/clinic/laboratory",
       PHARMACY: "/clinic/pharmacy",
-      STOCK_MANAGER: "/stock-manager/dashboard",
+      STOCK_MANAGER: "/stock-manager/",
       GENERAL_STAFF: "/dashboard",
     };
 
@@ -117,7 +91,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|public).*)"],
 };

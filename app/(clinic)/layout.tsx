@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/lib/theme-context";
 import "@/app/globals.css";
 import { Navbar } from "@/components/Navbar";
 import AuthSessionProvider from "@/components/AuthSessionProvider";
+import { getAuthSession } from "@/lib/auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,13 +22,15 @@ export const metadata: Metadata = {
   description: "Jigjiga University",
 };
 
-export default function RootLayout({
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getAuthSession();
   return (
-    <AuthSessionProvider>
+    <AuthSessionProvider session={session}>
       <Navbar />
       <ThemeProvider>
         {children}

@@ -46,8 +46,16 @@ export function Navbar() {
  const currentPageTitle = () => {
     const routes: Record<string, string> = {
       "/admin": "Dashboard",
+      "/admin/visits": "Patient Visits",
+      "/admin/stock": "Inventory/Stock",
+      "/admin/users": "User Management",
+      "/admin/reports/visitors": "Visitor Report",
+      "/admin/reports/stock": "Stock Report",
+
       "/stock-manager": "Stock Management",
       "/stock-manager/notifications": "Notifications",
+      "/stock-manager/stock": "Stock",
+      "/stock-manager/": "Dashboard",
     }
     return routes[pathname] || ""
   }

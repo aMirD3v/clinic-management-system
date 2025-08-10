@@ -181,7 +181,7 @@ const onSubmit = async (data: FormData) => {
                 )}
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                   <a
                     href="#"
@@ -189,11 +189,16 @@ const onSubmit = async (data: FormData) => {
                   >
                     Forgot your password?
                   </a>
-                </div>
+                </div> */}
                 <Input 
                   id="password" 
                   type="password"
                   placeholder="password"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSubmit(onSubmit)();
+                    }
+                  }}
                   required 
                   {...register("password", { required: "Password is required" })} 
                   className={errors.password ? "border-red-500" : "border-gray-300 dark:border-gray-700"}

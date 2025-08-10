@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,7 +18,9 @@ import { Stock } from "@prisma/client";
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
-  medicineName: z.string().min(2, "Medicine name must be at least 2 characters."),
+  medicineName: z
+    .string()
+    .min(2, "Medicine name must be at least 2 characters."),
   description: z.string().optional(),
   batchNumber: z.string().optional(),
   manufacturer: z.string().optional(),
@@ -58,8 +59,8 @@ export function EditStockForm({
       unit: stock.unit,
       price: stock.price || 0,
       costPrice: stock.costPrice || 0,
-      expiryDate: new Date(stock.expiryDate).toISOString().split('T')[0],
-      manufactureDate: stock.manufactureDate?.toISOString().split('T')[0] || "",
+      expiryDate: new Date(stock.expiryDate).toISOString().split("T")[0],
+      manufactureDate: stock.manufactureDate?.toISOString().split("T")[0] || "",
       reorderLevel: stock.reorderLevel || 0,
       maxStockLevel: stock.maxStockLevel || 0,
       storageLocation: stock.storageLocation || "",
@@ -114,45 +115,36 @@ export function EditStockForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="batchNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Batch Number</FormLabel>
-              <FormControl>
-                <Input placeholder="BATCH123" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="manufacturer"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Manufacturer</FormLabel>
-              <FormControl>
-                <Input placeholder="ABC Pharma" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="quantity"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Quantity</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Quantity</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
           name="unit"
@@ -166,110 +158,36 @@ export function EditStockForm({
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.01" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="costPrice"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cost Price</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.01" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="expiryDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Expiry Date</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="manufactureDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Manufacture Date</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="reorderLevel"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Reorder Level</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="maxStockLevel"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Max Stock Level</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="storageLocation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Storage Location</FormLabel>
-              <FormControl>
-                <Input placeholder="Shelf A3" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Any additional notes" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="expiryDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Expiry Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="reorderLevel"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Reorder Level</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <Button type="submit">Save Changes</Button>
       </form>
     </Form>

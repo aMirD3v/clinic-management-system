@@ -21,17 +21,20 @@ export const metadata: Metadata = {
   description: "Jigjiga University",
 };
 
-export default function RootLayout({
+import { getAuthSession } from "@/lib/auth";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getAuthSession();
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       > 
-        <AuthSessionProvider>
+        <AuthSessionProvider session={session}>
           <ThemeProvider>
             <NotificationToast />
             {children}

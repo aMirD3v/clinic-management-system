@@ -7,7 +7,7 @@ import { getServerSession } from "next-auth";
 export async function PUT(req: NextRequest, { params }: { params: Promise <{ id: string }> }) {
   const session = await getServerSession(authOptions);
 
-  if (session?.user?.role !== "STOCK_MANAGER") {
+  if (session?.user?.role !== "STOCK_MANAGER" && session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
@@ -24,7 +24,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise <{ id:
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
 
-  if (session?.user?.role !== "STOCK_MANAGER") {
+  if (session?.user?.role !== "STOCK_MANAGER" && session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 

@@ -1,28 +1,34 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { FaChevronRight } from "react-icons/fa";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 import { Navbar } from "./Navbar";
 import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLayout({
   children,
+  session: serverSession,
 }: {
   children: React.ReactNode;
+  session: any;
 }) {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  // useSession is still valuable for client-side updates, e.g., after a sign-out.
+  const { data: clientSession, status } = useSession();
+  
+  // Prioritize the server-side session for the initial render.
+  const session = serverSession || clientSession;
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({
     clinic_reports: pathname.includes("/clinic_reports"),
     stock_reports: pathname.includes("/stock_reports"),
-
   });
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -47,7 +53,6 @@ export default function DashboardLayout({
   };
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
-  const toggleProfileDropdown = () => setProfileDropdownOpen((prev) => !prev);
 
   const linkClass = (path: string) =>
     `group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out ${
@@ -55,6 +60,27 @@ export default function DashboardLayout({
         ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
         : "text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
     }`;
+
+  // Show loading skeleton only if the session is not available from server or client.
+  if (status === "loading" && !serverSession) {
+    return (
+        <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+            <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-4">
+                <div className="flex flex-col space-y-4">
+                    <Skeleton className="h-8 w-32" />
+                    <Skeleton className="h-8 w-full mt-4" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                </div>
+            </aside>
+            <main className="flex-1 p-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-64 w-full mt-4" />
+            </main>
+        </div>
+    );
+  }
+
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
@@ -85,8 +111,6 @@ export default function DashboardLayout({
               />
             </div>
             <div className="hidden sm:flex items-center space-x-2">
-              {/* <h1 className="text-xl font-bold text-gray-900 dark:text-white">JJU</h1>
-                  <div className="bg-gray-900 dark:bg-blue-500 w-0.5 h-8"></div> */}
               <div className="flex flex-col">
                 <h1 className="text-sm font-bold text-gray-900 dark:text-white">
                   Jigjiga University
@@ -106,7 +130,7 @@ export default function DashboardLayout({
               <Link
                 href="/admin"
                 onClick={() => setSidebarOpen(false)}
-                className={linkClass("/dashboard/admin")}
+                className={linkClass("/admin")}
               >
                 <svg
                   className="w-5 h-5 mr-3"
@@ -130,13 +154,10 @@ export default function DashboardLayout({
                 Dashboard
               </Link>
 
-            
-
-              {/* Patient Visits Link */}
               <Link
                 href="/admin/visits"
                 onClick={() => setSidebarOpen(false)}
-                className={linkClass("/dashboard/admin/visits")}
+                className={linkClass("/admin/visits")}
               >
                 <svg
                   className="w-5 h-5 mr-3"
@@ -154,11 +175,10 @@ export default function DashboardLayout({
                 Patient Visits
               </Link>
 
-              {/* Inventory/Stock Link */}
               <Link
                 href="/admin/stock"
                 onClick={() => setSidebarOpen(false)}
-                className={linkClass("/dashboard/admin/stock")}
+                className={linkClass("/admin/stock")}
               >
                 <svg
                   className="w-5 h-5 mr-3"
@@ -176,7 +196,6 @@ export default function DashboardLayout({
                 Inventory/Stock
               </Link>
 
-              {/* Reports Dropdown */}
               <div className="space-y-1">
                 <button
                   onClick={() => toggleMenu("reports")}
@@ -217,25 +236,24 @@ export default function DashboardLayout({
                   <Link
                     href="/admin/reports/visitors"
                     onClick={() => setSidebarOpen(false)}
-                    className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
+                      className={linkClass("/admin/reports/visitors")}
+                      >
                     Visitor Report
                   </Link>
                   <Link
                     href="/admin/reports/stock"
                     onClick={() => setSidebarOpen(false)}
-                    className="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
+                 className={linkClass("/admin/reports/stock")}
+                     >
                     Stock Report
                   </Link>
                 </div>
               </div>
 
-                {/* User Management Link */}
               <Link
                 href="/admin/users"
                 onClick={() => setSidebarOpen(false)}
-                className={linkClass("/dashboard/admin/users")}
+                className={linkClass("/admin/users")}
               >
                 <svg
                   className="w-5 h-5 mr-3"
@@ -262,9 +280,9 @@ export default function DashboardLayout({
           {role === "STOCK_MANAGER" && (
             <>
               <Link
-                href="/stock-manager/dashboard"
+                href="/stock-manager"
                 onClick={() => setSidebarOpen(false)}
-                className={linkClass("/stock-manager/dashboard")}
+                className={linkClass("/stock-manager")}
               >
                 <svg
                   className="w-5 h-5 mr-3"
@@ -330,21 +348,6 @@ export default function DashboardLayout({
             </>
           )}
         </nav>
-
-        {/* Sidebar Footer */}
-        {/* <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-          <div className="flex items-center space-x-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">{getProfileInitial()}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {session?.user?.name || session?.user?.email}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{role?.toLowerCase()}</p>
-            </div>
-          </div>
-        </div> */}
       </aside>
 
       {/* Main Content Area */}

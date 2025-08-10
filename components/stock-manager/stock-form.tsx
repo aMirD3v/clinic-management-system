@@ -38,7 +38,8 @@ export function StockForm({ defaultValues, onSubmit, isSubmitting }: StockFormPr
         <Input id="price" type="number" {...register("price", { required: "Price is required", valueAsNumber: true })} className={errors.price ? "border-red-500" : ""} />
         {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
       </div>
-      <div className="grid gap-2">
+     <div className="grid grid-cols-2 gap-4">
+         <div className="grid gap-2">
         <Label htmlFor="expiryDate">Expiry Date</Label>
         <Input id="expiryDate" type="date" {...register("expiryDate", { required: "Expiry Date is required", valueAsDate: true })} className={errors.expiryDate ? "border-red-500" : ""} />
         {errors.expiryDate && <p className="text-red-500 text-sm">{errors.expiryDate.message}</p>}
@@ -47,6 +48,8 @@ export function StockForm({ defaultValues, onSubmit, isSubmitting }: StockFormPr
         <Label htmlFor="reorderLevel">Reorder Level</Label>
         <Input id="reorderLevel" type="number" {...register("reorderLevel", { valueAsNumber: true })} />
       </div>
+      </div>
+     
       <div className="grid gap-2">
         <Label htmlFor="description">Description</Label>
         <Textarea id="description" {...register("description")} />
